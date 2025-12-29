@@ -2,8 +2,9 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AstriVostri - L'Oroscopo dei Mejo</title>
+    <meta name="description" content="Oroscopo romano verace. Pane ar pane, vino ar vino.">
     
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LZKR3PNKKX"></script>
@@ -28,7 +29,7 @@
     <style>
         /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: rgba(30, 41, 59, 0.1); 
@@ -52,6 +53,10 @@
             transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
             transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
             transition-duration: 300ms;
+        }
+        /* Evita zoom su input mobile */
+        input, textarea, button, select, a {
+            -webkit-tap-highlight-color: transparent;
         }
     </style>
 </head>
@@ -520,23 +525,52 @@
             if (!data) return;
 
             const shareText = `🔥 OROSCOPO ROMANO de GIGI 🔥\n\n${sign.name} ♈\n"${data.text}"\n\nmood: ${data.mood.icon} ${data.mood.label}\nmagna: 🍝 ${data.food}\nnumeri: 🍀 ${data.numbers.join('-')}\n\n👉 Leggi er tuo su AstriVostri.com\n#AstriVostri #OroscopoRomano #Daje`;
+            const shareUrl = 'https://astrivostri.com';
 
-            const shareData = {
-              title: 'AstriVostri - Oroscopo Romano',
-              text: shareText,
-              url: 'https://astrivostri.com',
-            };
-
+            // 1. Prova Web Share API (Mobile: WhatsApp, Instagram, etc.)
             if (navigator.share) {
               try {
-                await navigator.share(shareData);
+                await navigator.share({
+                  title: 'AstriVostri - Oroscopo Romano',
+                  text: shareText,
+                  url: shareUrl,
+                });
+                return; // Se ha funzionato, usciamo
               } catch (err) {
-                console.log('Errore condivisione:', err);
+                console.log('Errore Web Share, provo clipboard:', err);
+                // Se l'utente annulla o fallisce, proviamo la clipboard
               }
-            } else {
-              navigator.clipboard.writeText(shareText);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
+            }
+
+            // 2. Fallback: Clipboard API (Modern Desktop)
+            try {
+                await navigator.clipboard.writeText(shareText);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch (err) {
+                // 3. Fallback estremo: Textarea nascosta (Vecchio stile ma funziona sempre)
+                const textArea = document.createElement("textarea");
+                textArea.value = shareText;
+                
+                // Assicura che l'elemento sia parte del DOM ma non visibile
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                textArea.style.top = "0";
+                document.body.appendChild(textArea);
+                
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                } catch (e) {
+                    console.error('Manco co la forza:', e);
+                    alert("Aò, nun riesco a copià. Falla a mano!");
+                }
+                
+                document.body.removeChild(textArea);
             }
           };
 
