@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AstriVostri - L'Oroscopo de Gigi</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LZKR3PNKKX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+    
+      gtag('config', 'G-LZKR3PNKKX');
+    </script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Babel (per compilare JSX nel browser) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.5); 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(234, 179, 8, 0.3); 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(234, 179, 8, 0.6); 
+        }
+        .animate-spin-slow {
+            animation: spin 10s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans selection:bg-yellow-500/30">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- ICONE (Ricreate come componenti SVG inline per evitare dipendenze esterne complesse) ---
+        const IconBase = ({ children, className, ...props }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>{children}</svg>
+        );
+        const Sun = (props) => <IconBase {...props}><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></IconBase>;
+        const X = (props) => <IconBase {...props}><path d="M18 6 6 18"/><path d="m6 6 18 12"/></IconBase>;
+        const Share2 = (props) => <IconBase {...props}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></IconBase>;
+        const Moon = (props) => <IconBase {...props}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></IconBase>;
+        const Calendar = (props) => <IconBase {...props}><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></IconBase>;
+        const Check = (props) => <IconBase {...props}><polyline points="20 6 9 17 4 12"/></IconBase>;
+        const MessageCircle = (props) => <IconBase {...props}><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></IconBase>;
+        const Sparkles = (props) => <IconBase {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 5H5"/><path d="M3 7V3"/><path d="M3 5h4"/></IconBase>;
+        const Utensils = (props) => <IconBase {...props}><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></IconBase>;
+        const Dices = (props) => <IconBase {...props}><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></IconBase>;
+        const Trophy = (props) => <IconBase {...props}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></IconBase>;
+        const ArrowUp = (props) => <IconBase {...props}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></IconBase>;
+        const ArrowDown = (props) => <IconBase {...props}><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></IconBase>;
+        const User = (props) => <IconBase {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></IconBase>;
+        const Cookie = (props) => <IconBase {...props}><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/><path d="M8.5 8.5v.01"/><path d="M16 15.5v.01"/><path d="M12 12v.01"/><path d="M11 17v.01"/><path d="M7 14v.01"/></IconBase>;
+
+        // --- Dati e Risorse ---
+
+        const zodiacIcons = {
+          ariete: "M12 21a9 9 0 0 0 9-9h-9v9Zm0-9V3a9 9 0 0 0-9 9h9Zm0 0V7.5c0-1.5 3-4.5 4.5-4.5S21 6 21 7.5c0 3-4.5 4.5-4.5 4.5H12Zm0 0V7.5C12 6 9 3 7.5 3S3 6 3 7.5c0 3 4.5 4.5 4.5 4.5H12Z", 
+          toro: "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M12 12V6m-5-2a5 5 0 0 1 10 0",
+          gemelli: "M9 3v18M15 3v18M6 3h12M6 21h12",
+          cancro: "M6 12a6 6 0 1 0 12 0 6 6 0 1 0-12 0m0 0a6 6 0 1 1-12 0 6 6 0 1 1 12 0", 
+          leone: "M12 4a2 2 0 1 0-2 2 2 2 0 0 0 2-2m0 2c0 3-2 5-2 9s3 6 6 6 4-3 4-6-5-5-8-9",
+          vergine: "M4 4v16M4 12h4m0 0v8m0-8h4m0 0v8m0-4h4v4", 
+          bilancia: "M4 18h16M4 14h16M12 6c3 0 5 4 5 8H7c0-4 2-8 5-8",
+          scorpione: "M4 4v16M4 12h4m0 0v8m0-8h4m0 0v8m0-4h4v4l2 2", 
+          sagittario: "M5 19l14-14M19 5v8M19 5h-8M5 19l4 4", 
+          capricorno: "M4 6c0 4 2 6 5 6s4-4 4-8 4 6 4 10a4 4 0 1 1-8 0", 
+          acquario: "M3 10c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 16c2-2 4-2 6 0s4 2 6 0 4-2 6 0", 
+          pesci: "M12 3c-4 4-4 14 0 18M12 3c4 4 4 14 0 18M5 12h14"
+        };
+
+        const zodiacData = [
+          { id: 'ariete', name: 'Ariete', dates: '21 Mar - 19 Apr', element: 'Fuoco', icon: zodiacIcons.ariete },
+          { id: 'toro', name: 'Toro', dates: '20 Apr - 20 Mag', element: 'Terra', icon: zodiacIcons.toro },
+          { id: 'gemelli', name: 'Gemelli', dates: '21 Mag - 20 Giu', element: 'Aria', icon: zodiacIcons.gemelli },
+          { id: 'cancro', name: 'Cancro', dates: '21 Giu - 22 Lug', element: 'Acqua', icon: zodiacIcons.cancro },
+          { id: 'leone', name: 'Leone', dates: '23 Lug - 22 Ago', element: 'Fuoco', icon: zodiacIcons.leone },
+          { id: 'vergine', name: 'Vergine', dates: '23 Ago - 22 Set', element: 'Terra', icon: zodiacIcons.vergine },
+          { id: 'bilancia', name: 'Bilancia', dates: '23 Set - 22 Ott', element: 'Aria', icon: zodiacIcons.bilancia },
+          { id: 'scorpione', name: 'Scorpione', dates: '23 Ott - 21 Nov', element: 'Acqua', icon: zodiacIcons.scorpione },
+          { id: 'sagittario', name: 'Sagittario', dates: '22 Nov - 21 Dic', element: 'Fuoco', icon: zodiacIcons.sagittario },
+          { id: 'capricorno', name: 'Capricorno', dates: '22 Dic - 19 Gen', element: 'Terra', icon: zodiacIcons.capricorno },
+          { id: 'acquario', name: 'Acquario', dates: '20 Gen - 18 Feb', element: 'Aria', icon: zodiacIcons.acquario },
+          { id: 'pesci', name: 'Pesci', dates: '19 Feb - 20 Mar', element: 'Acqua', icon: zodiacIcons.pesci },
+        ];
+
+        // Funzione pseudo-random basata sulla data
+        const getDailyRandom = (seedString) => {
+          let hash = 0;
+          for (let i = 0; i < seedString.length; i++) {
+            const char = seedString.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+          }
+          return Math.abs(hash);
+        };
+
+        const getDailyStats = (signId) => {
+          const today = new Date().toISOString().slice(0, 10);
+          const seed = getDailyRandom(today + signId);
+          const love = (seed % 60) + 40;
+          const work = ((seed * 7) % 60) + 30;
+          const luck = ((seed * 13) % 60) + 20;
+          const total = love + work + luck;
+          return { love, work, luck, total };
+        };
+
+        const generateRanking = () => {
+          const ranking = zodiacData.map(sign => {
+            const stats = getDailyStats(sign.id);
+            return { ...sign, score: stats.total };
+          });
+          return ranking.sort((a, b) => b.score - a.score);
+        };
+
+        const generateRomanHoroscope = (sign, element) => {
+          const today = new Date().toISOString().slice(0, 10);
+          const seed = getDailyRandom(today + sign.id);
+          const stats = getDailyStats(sign.id);
+          
+          const intros = [
+            "Aò, stamme a sentì bene oggi:", "Allora, le carte dicono questo:", "Oggi butta in na maniera strana:", "Senti n'po' che t'aspetta:", "Dunque, la situazione è questa:",
+            "Nun te vojo mette ansia, ma...", "Apri bene le orecchie:", "Te lo dico cor core in mano:", "Er cielo oggi parla chiaro:", "Manco a dillo, oggi è così:",
+            "Se fossi in te, oggi starei attento:", "Guarda, l'astri oggi so' 'n po' brilli:", "Ho visto le stelle e m'hanno detto:", "Amico mio, oggi è 'na giornata particolare:", "Non so come dirtelo, ma:",
+            "Oggi er destino t'ha preso di mira:", "Famo a capisse, oggi va così:", "Senti che roba oggi:", "Me sa che oggi te tocca remà:", "L'oroscopo tuo oggi è 'n film:",
+            "Aho, svejate che le stelle so' già operative:", "Te sei alzato cor piede giusto? Speramo:", "Er monno gira, e tu giri co lui:", "Vedi de non fa casini oggi:", "Oggi c'hai Saturno che te guarda male:",
+            "Giove t'ha mandato n'messaggio su WhatsApp:", "Venere t'ha bloccato, ma Marte te segue:", "Ascolta er consiglio der vecchio Gigi:", "Mettite seduto che te devo dì na cosa:", "Oggi è er giorno tuo... o forse no:",
+            "Daje che oggi spacchi (o vieni spaccato):", "Er cielo sopra Roma dice che:", "Le costellazioni s'hanno fatto na riunione su de te:", "Oggi er karma t'ha messo 'n lista d'attesa:", "Senti 'sta profezia, fresca fresca:",
+            "Nun te lamentà prima de sentì:", "Sei pronto? Allora senti qua:", "Oggi l'universo c'ha n'piano pe te:", "Forse era mejo se restavi a letto, ma vabbè:", "Oggi c'hai n'aura potente, pure troppo:"
+          ];
+
+          const middles = [
+            "te senti carico a pallettoni, pronto a sfonnà tutto.", "la pazienza te sta a salutà co la manina.", "l'amore è n'calesse, se non te sbrighi a salì rimani a piedi.", "er lavoro te stressa ma i sordi, forse, arrivano.",
+            "meglio che te stai zitto oggi, che ogni parola è na condanna.", "fai er bravo, che er karma te guarda.", "hai la testa dura come i sampietrini de Piazza Venezia.", "te senti solo come n'gabbiano ar Gianicolo.",
+            "c'hai n'energia che potresti illuminà er Raccordo Anulare.", "la gente te cerca, ma tu voj solo stà sul divano.", "occhio a chi te sorride, che magari vole solo scroccà er caffè.", "l'amore oggi è come la metro C: non se sa quando arriva.",
+            "oggi sei acido come lo yogurt scaduto, fatte na risata.", "sei dolce come er maritozzo, ma occhio alla glicemia.", "c'hai più dubbi te che Amleto in fila alle poste.", "te senti un gladiatore, ma stai attento ai leoni.",
+            "oggi n'te va bene niente, manco se te regalano i sordi.", "sei confuso come n'turista a Termini.", "c'hai na voglia de lavorà che saltame addosso.", "er partner te sta a studià, vedi de non fallì l'esame.",
+            `essendo de ${element}, oggi bruci come l'asfalto d'agosto.`, `visto che sei de ${element}, te senti fluido ma occhio a non scivolà.`, `col tuo segno ${element}, oggi voli alto ma attento ai piccioni.`, `da bravo segno de ${element}, sei concreto come n'mattone forato.`,
+            "oggi c'hai la luna storta e er sole pure peggio.", "se pensi de avè ragione, ricordate che pure i matti so convinti.", "fai pace cor cervello prima de parlà.", "l'opportunità bussa, ma tu stavi in bagno.",
+            "c'è n'aria de cambiamento, o forse hai solo lasciato la finestra aperta.", "te senti n'po' poeta e n'po' muratore oggi.", "la fortuna te gira intorno, acchiappala ar volo.", "oggi sei magnetico, attiri pure le multe.",
+            "se devi fa na scelta, tira la monetina che è mejo.", "non te fidà manco de te stesso oggi.", "c'hai er fascino de n'attore de Cinecittà.", "oggi sei più lento de l'autobus notturno.",
+            "te senti n'po' Sora Lella e n'po' Verdone.", "la giornata promette bene, mantieni la calma e gesso.", "se ridi oggi, ridi domani, ridi sempre.", "oggi er core tuo batte forte, sarà amore o tachicardia?",
+            "hai bisogno de n'abbraccio o de n'bonifico, decidi te.", "la creatività te scorre nelle vene tipo vino.", "oggi risolvi tutto co n'alzata de spalle.", "sei testardo ma c'hai n'core grande così.",
+            "la vita è na ruota, e oggi te tocca stà sotto.", "ma che t'hanno fatto? Pari n'cero votivo.", "oggi splendi, ma ricordate gli occhiali da sole.", "l'amore te sorride, ma c'ha i denti sporchi de spinaci.",
+            "sei n'mistero pure pe te stesso oggi.", "la tua simpatia oggi è contagiosa, tipo influenza."
+          ];
+
+          const outros = [
+            "Daje tutta!", "E se va male... c'è sempre la Carbonara.", "Volemose bene, che la vita è corta.", "Fusse che fusse la vorta bbona!", "Forza e coraggio, che er male è di passaggio.",
+            "Bona, ho detto tutto.", "Mo vedi tu che devi fa.", "E ricordate: chi se fa li fatti sua campa cent'anni.", "Daje, che domani è n'artro giorno.", "Stacce.",
+            "E non te scordà de soride.", "Vai e spacca tutto (metaforicamente eh).", "Speramo bene.", "Vattelapesca.", "E come diceva er nonno: magna e fregatene.",
+            "Pija la vita come viene.", "Sei forte, ricordatelo.", "Mò statte bono.", "Chiudi l'occhi e spera.", "Arrivederci e grazie.",
+            "Nun mollà manco de n'centimetro.", "A la prossima puntata.", "Che la forza (e la porchetta) sia con te.", "Statte accorto.", "Daje de tacco, daje de punta.",
+            "E se caschi, rialzate e fai finta de niente.", "Ma che te lo dico a fa?", "Buona fortuna, ne hai bisogno.", "T'ho detto tutto, mo so cavoli tui.", "Ciao core."
+          ];
+
+          const foods = [
+            "Rigatoni alla Carbonara", "Tonnarelli Cacio e Pepe", "Bucatini all'Amatriciana", "Pasta alla Gricia", "Coda alla Vaccinara",
+            "Abbacchio a scottadito", "Carciofi alla Giudia", "Trippa alla Romana", "Supplì al telefono", "Maritozzo con la panna",
+            "Pizza e Mortazza", "Saltimbocca alla Romana", "Puntarelle con le alici", "Filetti di Baccalà fritti", "Pajata",
+            "Vignarola (se è stagione)", "Pollo coi peperoni", "Gnocchi alla Romana", "Fave e Pecorino", "Crostata di Visciole",
+            "Grattachecca", "Pizza Bianca (scrocchiarella)", "Porchetta di Ariccia", "Fagioli con le cotiche", "Pizzette rosse"
+          ];
+
+          const moods = [
+            { icon: "🤯", label: "Esaurito" }, { icon: "🥳", label: "In Festa" }, { icon: "😴", label: "Abbioccato" }, { icon: "🤬", label: "Nerissimo" },
+            { icon: "🤩", label: "Stellare" }, { icon: "🥶", label: "Ghiacciato" }, { icon: "🌶️", label: "Piccante" }, { icon: "💸", label: "Al verde" },
+            { icon: "👀", label: "Guardingo" }, { icon: "🦁", label: "Leone" }, { icon: "🦄", label: "Magico" }, { icon: "🌪️", label: "Caotico" },
+            { icon: "🔋", label: "Carico" }, { icon: "🪫", label: "Scarico" }, { icon: "🍝", label: "Affamato" }, { icon: "🍷", label: "'Mbriaco" }
+          ];
+
+          const i1 = seed % intros.length;
+          const i2 = (seed * 7 + 13) % middles.length; 
+          const i3 = (seed * 3 + 7) % outros.length;
+          const foodIndex = (seed * 17) % foods.length;
+          const moodIndex = (seed * 23) % moods.length;
+
+          const n1 = (seed % 90) + 1;
+          const n2 = ((seed * 5) % 90) + 1;
+          const n3 = ((seed * 11) % 90) + 1;
+
+          return {
+            text: `${intros[i1]} ${middles[i2]} ${outros[i3]}`,
+            stats: stats,
+            food: foods[foodIndex],
+            numbers: [n1, n2, n3],
+            mood: moods[moodIndex]
+          };
+        };
+
+        const StarField = () => {
+          const stars = useMemo(() => {
+            return [...Array(60)].map((_, i) => ({
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              width: `${Math.random() * 3 + 1}px`,
+              height: `${Math.random() * 3 + 1}px`,
+              animationDuration: `${Math.random() * 3 + 1}s`,
+              animationDelay: `${Math.random() * 2}s`
+            }));
+          }, []);
+
+          return (
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-slate-950">
+              <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-indigo-950/20 to-slate-950"></div>
+              {stars.map((star, i) => (
+                <div
+                  key={i}
+                  className="absolute bg-white rounded-full opacity-60 animate-pulse shadow-[0_0_2px_#fff]"
+                  style={star}
+                />
+              ))}
+            </div>
+          );
+        };
+
+        const Logo = () => (
+          <div className="relative group cursor-pointer">
+            <div className="absolute inset-0 bg-orange-500 blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 rounded-full"></div>
+            <div className="relative bg-gradient-to-br from-yellow-400 to-orange-600 p-3 rounded-2xl shadow-xl shadow-orange-500/20 transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
+              <div className="relative w-8 h-8 md:w-10 md:h-10">
+                <Sun className="absolute inset-0 w-full h-full text-white animate-[spin_10s_linear_infinite]" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                     <span className="text-xs md:text-sm font-black text-orange-900 animate-pulse">AV</span>
+                </div>
+              </div>
+            </div>
+            <div className="absolute -top-1 -right-1 w-3 h-3 bg-cyan-400 rounded-full border-2 border-slate-950 animate-bounce"></div>
+          </div>
+        );
+
+        const Header = ({ savedSign, onOpenSaved }) => (
+          <nav className="relative z-10 flex flex-col md:flex-row justify-between items-center p-4 md:p-6 border-b border-white/5 bg-slate-950/80 backdrop-blur-md sticky top-0 shadow-lg gap-4 md:gap-0 transition-all">
+            <div className="flex items-center gap-4">
+              <Logo />
+              <div className="text-left">
+                <h1 className="text-2xl md:text-3xl font-black italic bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-orange-400 to-red-500 tracking-tighter leading-none filter drop-shadow-sm">
+                  AstriVostri
+                </h1>
+                <p className="text-[10px] md:text-xs text-orange-200/70 font-bold uppercase tracking-widest mt-1">
+                  L'Astri vostri e di chi ve li manna
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              {savedSign && (
+                <button 
+                  onClick={onOpenSaved}
+                  className="group flex items-center gap-2 bg-white/5 hover:bg-white/10 hover:border-yellow-500/50 px-4 py-2 rounded-full text-xs font-bold text-slate-300 hover:text-yellow-400 transition-all border border-white/5 shadow-sm"
+                >
+                  <div className="bg-yellow-500/20 p-1 rounded-full group-hover:bg-yellow-500/40 transition-colors">
+                     <User size={12} />
+                  </div>
+                  <span>{savedSign}</span>
+                </button>
+              )}
+            </div>
+          </nav>
+        );
+
+        const CookieBanner = () => {
+          const [isVisible, setIsVisible] = useState(false);
+
+          useEffect(() => {
+            const accepted = localStorage.getItem('cookieAccepted');
+            if (!accepted) {
+              const timer = setTimeout(() => setIsVisible(true), 1500);
+              return () => clearTimeout(timer);
+            }
+          }, []);
+
+          const acceptCookies = () => {
+            localStorage.setItem('cookieAccepted', 'true');
+            setIsVisible(false);
+          };
+
+          if (!isVisible) return null;
+
+          return (
+            <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-in slide-in-from-bottom-full duration-500">
+              <div className="max-w-4xl mx-auto bg-slate-900/95 backdrop-blur-md border border-yellow-500/30 rounded-2xl p-4 md:p-6 shadow-2xl shadow-black flex flex-col md:flex-row items-center gap-4 md:gap-8">
+                <div className="bg-yellow-500/20 p-3 rounded-full shrink-0 animate-bounce">
+                  <Cookie className="w-8 h-8 text-yellow-500" />
+                </div>
+                <div className="flex-grow text-center md:text-left">
+                  <h4 className="text-white font-bold text-lg mb-1">Aò, i biscotti! (Cookies)</h4>
+                  <p className="text-slate-400 text-xs md:text-sm leading-relaxed">
+                    Usamo i cookie solo pe' salvà er segno tuo, così nun devi cliccà ogni volta che torni e te godi l'oroscopo. Niente tracciamenti strani, niente spie, giuro su mi madre.
+                  </p>
+                </div>
+                <div className="flex gap-3 w-full md:w-auto shrink-0">
+                   <button 
+                     onClick={acceptCookies}
+                     className="flex-1 md:flex-none bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold py-3 px-6 rounded-xl transition-all shadow-lg transform active:scale-95"
+                   >
+                     Me fido, Daje
+                   </button>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const Ranking = () => {
+          const ranking = useMemo(() => generateRanking(), []);
+          
+          return (
+            <div className="max-w-md mx-auto mb-12 px-4">
+              <div className="bg-slate-900/80 border border-yellow-500/20 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute -right-10 -top-10 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl"></div>
+                
+                <div className="flex items-center justify-center gap-2 mb-5 text-yellow-400 font-black uppercase tracking-widest text-xs relative z-10">
+                  <Trophy size={14} />
+                  <span>La Classifica de Oggi</span>
+                </div>
+                
+                <div className="space-y-3 relative z-10">
+                  {/* Top 1 */}
+                  <div className="flex items-center justify-between bg-gradient-to-r from-yellow-500/20 to-transparent p-3 rounded-xl border-l-4 border-yellow-500 shadow-lg shadow-yellow-900/10 transition-transform hover:scale-[1.02]">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-yellow-500 text-slate-900 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs">1</div>
+                      <span className="font-bold text-white text-lg">{ranking[0].name}</span>
+                    </div>
+                    <ArrowUp size={20} className="text-green-400 animate-bounce" />
+                  </div>
+
+                  {/* Top 2 */}
+                  <div className="flex items-center justify-between bg-white/5 p-2 rounded-lg border-l-4 border-slate-400 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-slate-400 w-6 text-center">2</span>
+                      <span className="font-medium text-slate-200">{ranking[1].name}</span>
+                    </div>
+                  </div>
+
+                   {/* Top 3 */}
+                   <div className="flex items-center justify-between bg-white/5 p-2 rounded-lg border-l-4 border-orange-700 hover:bg-white/10 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-bold text-orange-700 w-6 text-center">3</span>
+                      <span className="font-medium text-slate-200">{ranking[2].name}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-center text-[10px] text-slate-500 pt-2 font-medium flex items-center justify-center gap-1">
+                     ...e ultimo posto pe' <strong className="text-red-400">{ranking[ranking.length - 1].name}</strong> <ArrowDown size={12} className="text-red-500"/>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const Hero = () => {
+          const today = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+          
+          return (
+            <div className="relative z-10 text-center py-10 md:py-16 px-4">
+              <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-slate-800/80 border border-slate-700 text-slate-300 text-xs font-bold mb-8 shadow-2xl uppercase tracking-wider backdrop-blur-md transform hover:scale-105 transition-transform cursor-default">
+                <Calendar size={14} className="text-yellow-500" />
+                <span className="capitalize">{today}</span>
+              </div>
+              <h1 className="text-5xl md:text-8xl font-black text-white mb-6 tracking-tight drop-shadow-2xl">
+                AstriVostri<span className="text-transparent bg-clip-text bg-gradient-to-tr from-yellow-400 to-orange-600">.com</span>
+              </h1>
+              <p className="text-lg md:text-2xl text-slate-400 max-w-2xl mx-auto mb-10 font-medium italic px-4 leading-relaxed">
+                "Sceji er segno tuo. Senza giri de parole,<br className="hidden md:block"/> pane ar pane e vino ar vino."
+              </p>
+            </div>
+          );
+        };
+
+        const HoroscopeModal = ({ sign, isOpen, onClose }) => {
+          const [loading, setLoading] = useState(true);
+          const [data, setData] = useState(null);
+          const [progress, setProgress] = useState(0);
+          const [copied, setCopied] = useState(false);
+          const [loadingText, setLoadingText] = useState("");
+
+          const loadingPhrases = [
+            "Sto a chiede a Sora Lella...",
+            "Sto a sentì Albertone...",
+            "Mandrake sta a mischià le carte...",
+            "Giulio Cesare sta a riflette...",
+            "Nerone sta a accenne er foco...",
+            "Sto a consultà l'antichi...",
+            "Er Papa sta a guardà le stelle...",
+            "Sto a chiamà er Gladiatore..."
+          ];
+
+          useEffect(() => {
+            if (isOpen) {
+              setLoading(true);
+              setProgress(0);
+              setData(null);
+              setCopied(false);
+              setLoadingText(loadingPhrases[0]);
+
+              localStorage.setItem('savedSignId', sign.id);
+
+              let phraseIndex = 0;
+              const textInterval = setInterval(() => {
+                phraseIndex = (phraseIndex + 1) % loadingPhrases.length;
+                setLoadingText(loadingPhrases[phraseIndex]);
+              }, 800);
+
+              const interval = setInterval(() => {
+                setProgress(prev => {
+                  if (prev >= 100) {
+                    clearInterval(interval);
+                    clearInterval(textInterval);
+                    return 100;
+                  }
+                  return prev + 4;
+                });
+              }, 80);
+
+              setTimeout(() => {
+                setData(generateRomanHoroscope(sign, sign.element));
+                setLoading(false);
+              }, 2500);
+
+              return () => {
+                clearInterval(interval);
+                clearInterval(textInterval);
+              };
+            }
+          }, [isOpen, sign]);
+
+          const handleShare = async () => {
+            if (!data) return;
+
+            const shareText = `🔮 AstriVostri - L'Oroscopo de Gigi\n\nPe' ${sign.name}: "${data.text}"\n\nMood: ${data.mood.icon} ${data.mood.label}\n🍝 Piatto: ${data.food}\n🍀 Numeri: ${data.numbers.join(' - ')}\n\nLeggi er tuo su: https://astrivostri.com`;
+
+            const shareData = {
+              title: 'AstriVostri',
+              text: shareText,
+              url: 'https://astrivostri.com',
+            };
+
+            if (navigator.share) {
+              try {
+                await navigator.share(shareData);
+              } catch (err) {
+                console.log('Errore condivisione:', err);
+              }
+            } else {
+              navigator.clipboard.writeText(shareText);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }
+          };
+
+          if (!isOpen || !sign) return null;
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/95 backdrop-blur-xl animate-in fade-in duration-300" onClick={onClose} />
+              
+              <div className="relative bg-slate-900 border border-slate-700 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl shadow-yellow-900/20 flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300">
+                
+                {/* Header Modale */}
+                <div className="bg-slate-800/50 p-5 flex justify-between items-center border-b border-white/5 shrink-0">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-2xl bg-gradient-to-br ${
+                      sign.element === 'Fuoco' ? 'from-orange-500 to-red-600' :
+                      sign.element === 'Acqua' ? 'from-blue-500 to-cyan-600' :
+                      sign.element === 'Aria' ? 'from-indigo-400 to-purple-500' :
+                      'from-emerald-500 to-green-600'
+                    } shadow-inner`}>
+                      <Sun className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-white tracking-wide uppercase">{sign.name}</h3>
+                      <p className="text-sm text-slate-400 font-medium">{sign.dates}</p>
+                    </div>
+                  </div>
+                  <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 p-2 rounded-full">
+                    <X size={24} />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-grow bg-slate-900 relative">
+                  
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-500/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/2"></div>
+
+                  {loading ? (
+                    <div className="text-center space-y-8 py-12 flex flex-col items-center justify-center h-full">
+                      <div className="relative">
+                        <Moon className="w-16 h-16 text-yellow-500 mx-auto animate-bounce" />
+                        <Sparkles className="w-6 h-6 text-white absolute -top-2 -right-2 animate-pulse" />
+                      </div>
+                      <div className="space-y-4 w-full max-w-xs">
+                        <p className="text-yellow-400 font-bold text-lg animate-pulse min-h-[1.75rem]">{loadingText}</p>
+                        <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                          <div 
+                            className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-300 ease-out"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-500 relative z-10">
+                      
+                      {/* Mood Badge */}
+                      <div className="flex justify-center">
+                         <div className="bg-slate-800 border border-yellow-500/30 px-5 py-2 rounded-full flex items-center gap-4 shadow-lg shadow-black/40 transform hover:scale-105 transition-transform cursor-default">
+                            <span className="text-4xl filter drop-shadow-md">{data.mood.icon}</span>
+                            <div className="flex flex-col text-left">
+                               <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Mood de Oggi</span>
+                               <span className="text-base font-black text-yellow-400">{data.mood.label}</span>
+                            </div>
+                         </div>
+                      </div>
+
+                      {/* Oroscopo Text */}
+                      <div className="bg-slate-800/40 p-6 rounded-2xl border border-white/5 relative group hover:bg-slate-800/60 transition-colors">
+                          <span className="absolute top-2 left-3 text-5xl text-white/5 font-serif group-hover:text-white/10 transition-colors">"</span>
+                          <p className="text-slate-200 text-xl leading-relaxed font-medium text-center italic drop-shadow-sm relative z-10 px-2">
+                            {data.text}
+                          </p>
+                          <span className="absolute bottom-0 right-4 text-5xl text-white/5 font-serif group-hover:text-white/10 transition-colors">"</span>
+                      </div>
+
+                      {/* Stats Grid */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="text-center bg-slate-800/40 p-3 rounded-xl border border-white/5">
+                          <div className="text-2xl font-black text-red-400">{data.stats.love}%</div>
+                          <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mt-1">Amore</div>
+                        </div>
+                        <div className="text-center bg-slate-800/40 p-3 rounded-xl border border-white/5">
+                          <div className="text-2xl font-black text-blue-400">{data.stats.work}%</div>
+                          <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mt-1">Sordi</div>
+                        </div>
+                        <div className="text-center bg-slate-800/40 p-3 rounded-xl border border-white/5">
+                          <div className="text-2xl font-black text-green-400">{data.stats.luck}%</div>
+                          <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mt-1">Culo</div>
+                        </div>
+                      </div>
+
+                      {/* Cibo e Numeri */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-slate-800/40 p-4 rounded-xl border border-white/5 flex flex-col items-center text-center justify-center hover:bg-slate-800/60 transition-colors">
+                          <div className="flex items-center gap-2 mb-2 text-orange-400">
+                            <Utensils size={16} />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Er Piatto</span>
+                          </div>
+                          <p className="text-sm font-bold text-slate-200 leading-tight">{data.food}</p>
+                        </div>
+                        <div className="bg-slate-800/40 p-4 rounded-xl border border-white/5 flex flex-col items-center text-center justify-center hover:bg-slate-800/60 transition-colors">
+                          <div className="flex items-center gap-2 mb-2 text-yellow-400">
+                            <Dices size={16} />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">I Numeri</span>
+                          </div>
+                          <div className="flex gap-2 text-base font-black text-slate-200">
+                            {data.numbers.map(n => (
+                              <span key={n} className="bg-white/10 w-7 h-7 rounded-full flex items-center justify-center text-xs border border-white/5">{n}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button 
+                        onClick={handleShare}
+                        className={`w-full font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-all transform hover:scale-[1.01] shadow-lg border border-yellow-500/20 active:scale-95 ${copied ? 'bg-green-600 text-white' : 'bg-yellow-500 hover:bg-yellow-400 text-slate-900'}`}
+                      >
+                        {copied ? <Check size={20} /> : <Share2 size={20} />}
+                        <span>{copied ? "Testo Copiato!" : "Condividi co l'amici"}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const ZodiacCard = ({ sign, onClick }) => (
+          <div 
+            onClick={() => onClick(sign)}
+            className="group relative bg-slate-900 border border-slate-800 hover:border-yellow-500/50 rounded-3xl p-6 cursor-pointer transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-yellow-500/10 overflow-hidden flex flex-col items-center active:scale-95"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/0 via-transparent to-purple-500/0 group-hover:from-yellow-500/5 group-hover:to-purple-500/5 transition-all duration-500" />
+            
+            <div className="relative z-10 flex flex-col items-center text-center">
+              <div className={`w-16 h-16 mb-4 rounded-full flex items-center justify-center bg-slate-950 group-hover:bg-slate-900 transition-colors border border-slate-800 group-hover:border-yellow-500/30 shadow-inner relative`}>
+                 <div className="absolute inset-0 bg-white/5 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-8 h-8 text-slate-400 group-hover:text-yellow-400 transition-colors relative z-10 transform group-hover:scale-110 duration-300">
+                  <path d={sign.icon} />
+                </svg>
+              </div>
+              
+              <h3 className="text-lg font-black text-slate-100 mb-1 group-hover:text-yellow-400 transition-colors tracking-tight">{sign.name}</h3>
+              <p className="text-[10px] text-slate-500 mb-3 font-medium uppercase tracking-wide">{sign.dates}</p>
+              
+              <span className={`px-2 py-1 rounded-lg text-[10px] font-bold tracking-widest uppercase border ${
+                sign.element === 'Fuoco' ? 'border-red-900/50 text-red-400 bg-red-900/10' :
+                sign.element === 'Acqua' ? 'border-blue-900/50 text-blue-400 bg-blue-900/10' :
+                sign.element === 'Aria' ? 'border-indigo-900/50 text-indigo-400 bg-indigo-900/10' :
+                'border-emerald-900/50 text-emerald-400 bg-emerald-900/10'
+              }`}>
+                {sign.element}
+              </span>
+            </div>
+          </div>
+        );
+
+        const App = () => {
+          const [selectedSign, setSelectedSign] = useState(null);
+          const [savedSignName, setSavedSignName] = useState(null);
+
+          useEffect(() => {
+            const savedId = localStorage.getItem('savedSignId');
+            if (savedId) {
+              const sign = zodiacData.find(s => s.id === savedId);
+              if (sign) setSavedSignName(sign.name);
+            }
+          }, [selectedSign]); 
+
+          const handleOpenSaved = () => {
+            const savedId = localStorage.getItem('savedSignId');
+            const sign = zodiacData.find(s => s.id === savedId);
+            if (sign) setSelectedSign(sign);
+          };
+
+          return (
+            <div>
+              <StarField />
+              <Header savedSign={savedSignName} onOpenSaved={handleOpenSaved} />
+              
+              <main className="container mx-auto pb-24 relative z-10">
+                <Hero />
+                <Ranking />
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4 md:px-0 max-w-6xl mx-auto">
+                  {zodiacData.map((sign) => (
+                    <ZodiacCard 
+                      key={sign.id} 
+                      sign={sign} 
+                      onClick={setSelectedSign} 
+                    />
+                  ))}
+                </div>
+              </main>
+
+              <footer className="relative z-10 border-t border-white/5 bg-slate-950 py-12">
+                <div className="container mx-auto px-4 text-center">
+                  <div className="flex items-center justify-center gap-3 mb-6">
+                     <div className="animate-spin-slow">
+                       <Sun className="w-5 h-5 text-yellow-500" />
+                     </div>
+                     <span className="font-black text-lg text-slate-200 italic">AstriVostri.com</span>
+                  </div>
+                  <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
+                    © 2024 AstriVostri. Oroscopo satirico per farsi due risate. Se le stelle non so' d'accordo, prenditela co' loro e co' chi ve li manna.
+                  </p>
+                </div>
+              </footer>
+
+              <CookieBanner />
+              <HoroscopeModal 
+                sign={selectedSign} 
+                isOpen={!!selectedSign} 
+                onClose={() => setSelectedSign(null)} 
+              />
+            </div>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
