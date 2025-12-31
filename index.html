@@ -23,10 +23,10 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- html2canvas per generare l'immagine -->
+    <!-- html2canvas -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
-    <!-- Font -->
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 
     <style>
@@ -41,12 +41,6 @@
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         
         .theme-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        
-        .card-pattern {
-            background-image: radial-gradient(circle, currentColor 1px, transparent 1px);
-            background-size: 24px 24px;
-            opacity: 0.03;
-        }
     </style>
 </head>
 <body>
@@ -118,46 +112,155 @@
             const today = new Date().toISOString().slice(0, 10);
             const seed = getDailyRandom(today + sign.id);
             
+            // 1. INCIPIT (30 Varianti)
             const intros = [
                 "Aò, stamme a sentì:", "Allora, le carte dicono:", "Oggi er cielo parla chiaro:", "Sentime bene:", "Oggi va così:", 
-                "Nun te la prendere, ma:", "Aò, apri l'orecchie:", "Le stelle c'hanno da dì:", "Guarda che roba oggi:", "Me sa che oggi:"
+                "Nun te la prendere, ma:", "Aò, apri l'orecchie:", "Le stelle c'hanno da dì:", "Guarda che roba oggi:", "Me sa che oggi:",
+                "Senti che aria tira:", "Famo n'po' er punto:", "Vedi de non svenì:", "Ahò, ma che davero?", "Oggi è 'na giornata strana:",
+                "Er destino t'ha puntato:", "Si, parlo co te:", "Nun fa quella faccia:", "Te lo dico cor core:", "Senti 'sta sentenza:",
+                "Aripijate e senti qua:", "Oggi le stelle so' strane:", "Er cosmo te guarda:", "Nun te vojo spaventà:", "Preparate ar peggio (o ar mejo):",
+                "Oggi butta male... o forse no:", "Aò, svejate che è ora:", "Er cielo sopra Roma dice:", "Manco l'oracolo ce crede:", "Oggi c'hai Saturno che te guarda:"
             ];
+
+            // 2. FRASE SPECIFICA DEL SEGNO (5 Varianti per segno = 60 Uniche)
+            // Questo rende impossibile che due segni abbiano lo stesso testo
+            const signSpecific = {
+                'ariete': [
+                    "c'hai la testa dura come i sampietrini, ma oggi te serve.", "sei partito a razzo, ma occhio a non finì la benzina subbito.",
+                    "te senti er padrone de Roma, ma ricordate che c'è pure er traffico.", "voi tutto e subito, ma oggi te tocca aspettà come alle poste.",
+                    "sei 'n foco che cammina, vedi de non brucià la casa."
+                ],
+                'toro': [
+                    "tu pensi solo a magnà e a stà comodo, e oggi fai pure bene.", "sei lento a partì, ma quando parti sei n'trattore sulla Pontina.",
+                    "te sei impuntato su na cosa inutile, lassa perde.", "oggi la pazienza tua è finita, chi tocca more.",
+                    "godite le cose belle, che pe le brutte c'è tempo."
+                ],
+                'gemelli': [
+                    "oggi c'hai na faccia pe ogni occasione, decidi quale usà.", "parli troppo, oggi statte zitto e ascolta n'po'.",
+                    "sei confuso come n'turista a Termini, pija na direzione.", "c'hai l'argento vivo addosso, ma fermate n'attimo.",
+                    "fai pace cor cervello tuo, che state a litigà da stamattina."
+                ],
+                'cancro': [
+                    "stai a fa er drammatico pe gnente, asciugate ste lacrime.", "sei permaloso oggi, manco 'buongiorno' te se pò dì.",
+                    "te voi chiude in casa a guscio, ma fori c'è er sole.", "oggi c'hai la luna storta proprio come te.",
+                    "proteggi le cose tue, ma non abbaià a tutti."
+                ],
+                'leone': [
+                    "te senti er Re de la foresta, ma oggi sei più n'gatto da divano.", "abbassa la cresta, che oggi non è aria.",
+                    "voi gli applausi, ma oggi c'è solo silenzio, fattene na ragione.", "sei generoso, ma occhio che te se magnano tutto.",
+                    "oggi brilli, ma attento a non accecà chi te sta vicino."
+                ],
+                'vergine': [
+                    "stai a controllà pure i peli nell'uovo, rilassate n'attimo.", "c'hai l'ansia pure pe respirà, ma che te frega?",
+                    "voi tutto perfetto, ma Roma è bella perchè è n'casino.", "oggi critichi pure i sassi, fatte i fatti tuoi.",
+                    "organizza meno e vivi de più, damme retta."
+                ],
+                'bilancia': [
+                    "non sai decide manco che pizza pija, figuramoce er resto.", "te stai a fa troppi problemi d'estetica, la sostanza ndo sta?",
+                    "voi andà d'accordo co tutti, ma oggi mannane qualcuno a quel paese.", "sei n'fiore de campo, ma occhio a chi te vole coglie.",
+                    "cerca l'equilibrio, ma se cadi, cadi co stile."
+                ],
+                'scorpione': [
+                    "oggi c'hai n'veleno addosso che manco le vipere.", "sei misterioso, ma a volte pari solo strano.",
+                    "te la sei legata al dito, ma mo slegala che t'è andata in cancrena.", "sei intenso, ma oggi pari n'film horror.",
+                    "usa l'intuito tuo pe capì chi te vole fregà."
+                ],
+                'sagittario': [
+                    "voi scappà via, ma te tocca stà qua a lavorà.", "spari cazzate a raffica oggi, ma sei simpatico.",
+                    "sei ottimista pure mentre affondi, beato te.", "oggi fai er passo più lungo della gamba, occhio allo strappo.",
+                    "c'hai la fretta addosso, ma ndo corri?"
+                ],
+                'capricorno': [
+                    "lavori troppo, pari n'mulo da soma, pija n'caffè.", "sei freddo come er marmo der Verano, scojite n'po'.",
+                    "voi arrivà in cima, ma ricordate de salutà chi sta sotto.", "oggi sei severo ma giusto, forse troppo severo.",
+                    "i sordi non so tutto, ma aiutano, e tu lo sai bene."
+                ],
+                'acquario': [
+                    "stai ner mondo tuo, scenni sulla terra n'attimo.", "oggi sei strano forte, ma te piace così.",
+                    "voi cambià er monno, ma inizia a rifà er letto.", "sei libero come l'aria, ma oggi c'è vento forte.",
+                    "fai er bastian contrario solo pe dillo."
+                ],
+                'pesci': [
+                    "stai a sognà a occhi aperti, occhio ar palo.", "te commuovi pure pe la pubblicità, oggi sei na fontana.",
+                    "sei bono e caro, ma non te fa pestà i piedi.", "c'hai n'casino in testa che manco er mercato de Porta Portese.",
+                    "segui l'onda, ma vedi de non affogà."
+                ]
+            };
+
+            // 3. SITUAZIONE (100 Varianti Generiche)
             const middles = [
-                "oggi te senti 'n leone, ma occhio a nun diventà 'n gattino bagnato.",
-                "l'amore è come er Raccordo: na cosa complicata, ma prima o poi arivi.",
-                "sul lavoro, fai er vago che è mejo, come quando passa er controllore.",
-                "c'hai n'energia che potresti illuminà San Pietro a gratis.",
-                "se pensi de avè ragione, ricordate che pure i matti so convinti d'esse Napoleone.",
-                "oggi statte bono, fatti du spaghi, n'bicchiere de vino e non ce pensà.",
-                "la fortuna te gira intorno, ma te stai a guardà er telefono invece de guardà lei.",
-                "sei più acido de uno yogurt scaduto nel 92, fatte na risata.",
-                "oggi splendi più der sole su la via Casilina alle 2 de pomeriggio.",
-                "c'hai la pazienza de n'santo, ma pure i santi ogni tanto sbroccano.",
-                "se te senti solo, pensa che c'è sempre qualcuno che te vole scroccà er caffè.",
-                "l'amore te sorride, ma c'ha i denti sporchi de spinaci.",
-                "oggi sei magnetico, attiri solo guai però.",
-                "er destino t'ha preparato na sorpresa, speramo non sia na multa."
+                "l'amore è come er Raccordo: na cosa complicata, ma prima o poi arivi.", "sul lavoro fai er vago, come quando passa er controllore.",
+                "c'hai n'energia che potresti illuminà San Pietro a gratis.", "se pensi de avè ragione, ricordate che pure i matti so convinti.",
+                "oggi statte bono, fatti du spaghi, n'bicchiere de vino e non ce pensà.", "la fortuna te gira intorno, ma te stai a guardà er telefono.",
+                "sei più acido de uno yogurt scaduto nel 92, fatte na risata.", "oggi splendi più der sole su la via Casilina.",
+                "c'hai la pazienza de n'santo, ma pure i santi ogni tanto sbroccano.", "se te senti solo, pensa che c'è sempre qualcuno che te vole scroccà er caffè.",
+                "l'amore te sorride, ma c'ha i denti sporchi de spinaci.", "oggi sei magnetico, attiri solo guai però.",
+                "er destino t'ha preparato na sorpresa, speramo non sia na multa.", "te senti carico come n'autobus dell'Atac all'ora de punta.",
+                "oggi vedi tutto nero, ma è solo che t'hanno staccato la luce.", "sei dolce come un maritozzo, ma occhio alla glicemia.",
+                "la gente te cerca, ma tu voj solo stà sul divano a guardà er soffitto.", "oggi c'hai più dubbi te che Amleto davanti a na carbonara vegana.",
+                "fai pace cor cervello, che sennò fai notte.", "te senti n'po' poeta e n'po' muratore.",
+                "l'opportunità bussa, ma tu stavi sotto la doccia.", "c'è n'aria de cambiamento, o forse hai solo lasciato la finestra aperta.",
+                "oggi sei lento, ma lento forte, tipo le poste.", "c'hai er fascino de n'attore de Cinecittà.",
+                "se devi fa na scelta, tira la monetina che è mejo.", "non te fidà manco de l'ombra tua oggi.",
+                "la vita è na ruota, e oggi te tocca stà sotto.", "ma che t'hanno fatto? Pari n'cero votivo.",
+                "oggi risolvi tutto co n'alzata de spalle e n'sorriso.", "l'amore è nell'aria... o forse è solo puzza de fritto.",
+                "te senti fluido come er Tevere, ma occhio ai detriti.", "sei concreto come n'mattone forato.",
+                "oggi bruci de passione, ma attento a non scottatte.", "hai la testa tra le nuvole, scenni giù che se tocca.",
+                "sei prezioso come n'parcheggio a Trastevere sabato sera.", "oggi te rimbalza tutto, sei impermeabile.",
+                "la giornata promette bene, se non esci de casa.", "sei n'mistero pure pe te stesso.",
+                "oggi c'hai la luna storta e er sole pure peggio.", "te senti ispirato, scrivi na poesia o fai la spesa.",
+                "la fortuna è cieca, ma la sfiga ce vede benissimo.", "oggi sei na molla pronta a scattà.",
+                "c'hai n'aura potente, sposti gli oggetti col pensiero.", "sei in sintonia coll'universo, ma l'universo non lo sa.",
+                "oggi te senti 'n re, ma occhio alla ghigliottina.", "sei come er Colosseo: maestoso ma pieno de gente.",
+                "fai come er Tevere: scorri e portate via tutto.", "oggi n'te va bene niente, manco se te regalano i sordi.",
+                "sei confuso, ma felice.", "c'hai na voglia de lavorà che saltame addosso.",
+                "er partner te sta a studià, vedi de non fallì.", "c'hai i nervi a fior de pelle.",
+                "sei carico, ma a salve.", "oggi vedi la luce in fondo ar tunnel (speramo non sia er treno).",
+                "sei na pentola a pressione, sfiata n'po'."
             ];
+
+            // 4. CHIUSURA (30 Varianti)
             const outros = [
                 "Daje forte!", "Stacce e non te lamentà.", "Ho detto tutto.", "Mo vedi che devi fa.", "Bona così, a domani.", 
-                "E se non te sta bene, dillo a Saturno.", "Daje, su col morale.", "E ricordate: chi se fa li fatti sua...", "Amen.", "Vedi d'annà piano."
+                "E se non te sta bene, dillo a Saturno.", "Daje, su col morale.", "E ricordate: chi se fa li fatti sua...", "Amen.", "Vedi d'annà piano.",
+                "E non te scordà de soride.", "Vai e spacca tutto.", "Speramo bene.", "Vattelapesca.", "Magna e fregatene.",
+                "Pija la vita come viene.", "Sei forte, ricordatelo.", "Mò statte bono.", "Chiudi l'occhi e spera.", "Arrivederci e grazie.",
+                "Nun mollà manco de n'centimetro.", "A la prossima puntata.", "Che la forza sia con te.", "Statte accorto.", "Daje de tacco e de punta.",
+                "E se caschi, rialzate.", "Ma che te lo dico a fa?", "Buona fortuna, ne hai bisogno.", "T'ho detto tutto, mo so cavoli tui.", "Ciao core."
             ];
             
             const advices = [
                 "Spegni er telefono n'ora.", "Offri n'caffè a n'amico.", "Sorridi ar fornaio.", "Fai pace cor cervello.", 
-                "Magnate na cosa bona.", "Nun te incazzà.", "Chiama tu madre.", "Fai finta de niente.", "Respira forte.", "Fatte n'giro ar centro."
+                "Magnate na cosa bona.", "Nun te incazzà.", "Chiama tu madre.", "Fai finta de niente.", "Respira forte.", "Fatte n'giro ar centro.",
+                "Evita de discute cor capo.", "Compra n'Gratta e Vinci (uno solo).", "Stasera niente TV, esci.", "Mettite n'vestito che te piace.",
+                "Nun te fidà de chi dice 'te chiamo io'.", "Smetti de guardà er telefono a tavola.", "Dì de no se non te va.", "Guarda dove metti i piedi.",
+                "Nun te magnà le unghie.", "Fai pace co te stesso.", "Ascolta na canzone romana.", "Bevi più acqua (o vino).",
+                "Non rimandà a domani quello che poi fa oggi.", "Fai n'complimento a qualcuno.", "Lassa perde i pettegolezzi.",
+                "Fatte na dormita in più.", "Non corre, che tanto arivi uguale.", "Saluta er vicino de casa.", "Pija er sole se c'è.",
+                "Non spenne soldi inutili.", "Fai n'respiro e conta fino a 10.", "Ricordate chi sei.", "Non te fa mette i piedi in testa.",
+                "Ridi, che è gratis.", "Non pensà troppo al passato.", "Godite er momento.", "Fai na cosa matta.",
+                "Non te lamentà pe n'giorno.", "Fai del bene e scordate.", "Volate basso oggi."
             ];
-            const foods = ["Carbonara", "Cacio e Pepe", "Amatriciana", "Gricia", "Pajata", "Supplì", "Maritozzo", "Carciofo alla Giudia", "Trippa", "Saltimbocca", "Pizza Bianca", "Filetti di Baccalà"];
+
+            const foods = ["Carbonara", "Cacio e Pepe", "Amatriciana", "Gricia", "Pajata", "Supplì", "Maritozzo", "Carciofo alla Giudia", "Trippa", "Saltimbocca", "Pizza Bianca", "Filetti di Baccalà", "Coda alla Vaccinara", "Abbacchio a scottadito", "Puntarelle", "Gnocchi alla Romana", "Fave e Pecorino", "Crostata di Visciole", "Grattachecca", "Pollo coi peperoni", "Fagioli con le cotiche", "Pizzette rosse", "Vignarola", "Porchetta", "Ciambelline al vino"];
             
             const moods = [
                 { icon: "🤯", label: "Esaurito" }, { icon: "🥳", label: "In Festa" }, { icon: "😴", label: "Abbioccato" }, 
-                { icon: "🤬", label: "Nerissimo" }, { icon: "🤩", label: "Stellare" }, { icon: "🌶️", label: "Piccante" }, { icon: "💸", label: "Al verde" }
+                { icon: "🤬", label: "Nerissimo" }, { icon: "🤩", label: "Stellare" }, { icon: "🥶", label: "Ghiacciato" }, 
+                { icon: "🌶️", label: "Piccante" }, { icon: "💸", label: "Al verde" }, { icon: "👀", label: "Guardingo" },
+                { icon: "🦁", label: "Leone" }, { icon: "🦄", label: "Magico" }, { icon: "🌪️", label: "Caotico" },
+                { icon: "🔋", label: "Carico" }, { icon: "🪫", label: "Scarico" }, { icon: "🍷", label: "'Mbriaco" }
             ];
 
+            // Selezioni casuali basate sul seed
             const idx = (n, arr) => (seed * n) % arr.length;
             
+            // Logica specifica: Intro + FraseSegno + FraseGenerica + Outro
+            const specificPhrase = signSpecific[sign.id][idx(5, signSpecific[sign.id])];
+            const middlePhrase = middles[idx(7, middles)];
+            
             return {
-                text: `${intros[idx(1, intros)]} ${middles[idx(7, middles)]} ${outros[idx(3, outros)]}`,
+                text: `${intros[idx(1, intros)]} ${specificPhrase} ${middlePhrase} ${outros[idx(3, outros)]}`,
                 advice: advices[idx(11, advices)],
                 food: foods[idx(17, foods)],
                 mood: moods[idx(23, moods)],
@@ -219,16 +322,11 @@
             const ranking = useMemo(() => generateRanking(), []);
             
             const loserPhrases = [
-                "Aò, oggi statte a casa.",
-                "Manco er cane te da retta.",
-                "Fai finta de esse n'altro segno.",
-                "Se te cade na moneta, non la raccoglie.",
-                "Oggi sei utile come n'semaforo a li Prati.",
-                "Consiglio: torna a dormì.",
-                "Ma che t'hanno fatto le stelle oggi?",
-                "Sei messo male, ma domani è n'artro giorno."
+                "Aò, oggi statte a casa.", "Manco er cane te da retta.", "Fai finta de esse n'altro segno.",
+                "Se te cade na moneta, non la raccoglie.", "Oggi sei utile come n'semaforo a li Prati.",
+                "Consiglio: torna a dormì.", "Ma che t'hanno fatto le stelle oggi?", "Sei messo male, ma domani è n'artro giorno.",
+                "Oggi pure er gatto nero se tocca quanno te vede.", "Meglio che nun te alzi proprio."
             ];
-            // Usa memo con dipendenza vuota per calcolarlo una volta sola al mount
             const randomLoserPhrase = useMemo(() => loserPhrases[Math.floor(Math.random() * loserPhrases.length)], []);
 
             return (
@@ -384,7 +482,7 @@
                                             <div className="flex items-start gap-3">
                                                 <Icon path={Icons.Lightbulb} className="w-5 h-5 shrink-0 opacity-70 mt-0.5" />
                                                 <div>
-                                                    <div className="text-[10px] uppercase font-bold opacity-60">Consiglio</div>
+                                                    <div className="text-[10px] uppercase font-bold opacity-60">Er Consiglio Arcano</div>
                                                     <div className="text-sm font-bold leading-tight">{data.advice}</div>
                                                 </div>
                                             </div>
@@ -430,14 +528,14 @@
             const [phrase, setPhrase] = useState("");
 
             useEffect(() => {
-                // GENERATORE SOTTOTITOLO INFINITO
-                const part1 = ["Sceji er segno tuo.", "Vedi che dice er destino.", "Oggi ridi o piagni?", "Le stelle non mentono.", "Aò, che voi sapè?", "Er cielo sopra Roma.", "Oroscopo sincero.", "Mettite comodo.", "Nun c'è trucco."];
-                const part2 = ["Senza giri de parole.", "Pane ar pane, vino ar vino.", "Se te dice male, ridi.", "Manco Fox ce pija così.", "Tutto scritto, forse.", "Daje de tacco.", "Verità assoluta (quasi).", "Poche chiacchiere.", "Diretto e verace."];
-                const part3 = ["E stacce.", "E nun te lamentà.", "E se non te piace, ciao.", "Garantito ar limone.", "Fidate de me.", "E speramo bene.", "E volemose bene.", "E bona così."];
+                // GENERATORE SOTTOTITOLO "INFINITO" (3 Blocchi x 20 frasi)
+                const parts1 = ["Sceji er segno tuo.", "Vedi che dice er destino.", "Oggi ridi o piagni?", "Le stelle non mentono.", "Aò, che voi sapè?", "Er cielo sopra Roma.", "Oroscopo sincero.", "Mettite comodo.", "Nun c'è trucco.", "Pura verità.", "Astri e disastri.", "Senti qua.", "Oggi butta così.", "Fidate de me.", "Niente algoritmi.", "Solo cose vere.", "Lo dice er cosmo.", "Segni e sogni.", "Destino scritto.", "Parole sante."];
+                const parts2 = ["Senza giri de parole.", "Pane ar pane, vino ar vino.", "Se te dice male, ridi.", "Manco Fox ce pija così.", "Tutto scritto, forse.", "Daje de tacco.", "Verità assoluta (quasi).", "Poche chiacchiere.", "Diretto e verace.", "Senza filtri.", "Crudo e nudo.", "Come viene viene.", "Manco tu madre te lo dice.", "Più chiaro de così.", "Scritto ner cielo.", "Tra n'supplì e n'consiglio.", "Più preciso der traffico.", "Senza inganni.", "Te lo dico in faccia.", "Manco li santi lo sanno."];
+                const parts3 = ["E stacce.", "E nun te lamentà.", "E se non te piace, ciao.", "Garantito ar limone.", "Fidate de l'istinto.", "E speramo bene.", "E volemose bene.", "E bona così.", "E poi se vede.", "E tira a campà.", "E chi s'è visto s'è visto.", "E daje tutta.", "E non ce pensà.", "E mo so cavoli tui.", "E statte bono.", "E vedi de rigà dritto.", "E non fa er vago.", "E pensa positivo.", "E fatte n'risata.", "E daje Roma."];
                 
-                const r1 = part1[Math.floor(Math.random() * part1.length)];
-                const r2 = part2[Math.floor(Math.random() * part2.length)];
-                const r3 = part3[Math.floor(Math.random() * part3.length)];
+                const r1 = parts1[Math.floor(Math.random() * parts1.length)];
+                const r2 = parts2[Math.floor(Math.random() * parts2.length)];
+                const r3 = parts3[Math.floor(Math.random() * parts3.length)];
                 
                 setPhrase(`${r1} ${r2} ${r3}`);
             }, []);
@@ -464,7 +562,7 @@
             useEffect(() => {
                 if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) setTheme('light');
                 
-                const nets = ["Se te senti sfigato vai su", "Consigliamo pure", "I cugini de campagna (e de oroscopo):", "Se cerchi artre risposte:", "Er network nostro:"];
+                const nets = ["Se te senti sfigato vai su", "Consigliamo pure", "I cugini de campagna (e de oroscopo):", "Se cerchi artre risposte:", "Er network nostro:", "Perle de saggezza su:", "Se nun t'abbasta:"];
                 setNetworkMsg(nets[Math.floor(Math.random() * nets.length)]);
             }, []);
 
@@ -520,5 +618,3 @@
     </script>
 </body>
 </html>
-
-
