@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -336,717 +335,184 @@
                         
                         <div className="p-4 flex justify-between items-center z-10">
                             <span className="text-[10px] font-black uppercase tracking-widest opacity-50">AstriVostri.com</span>
-                            <button onClick={onClose} className={`p-2 rounded-full ${theme === 'dark' ? 'bg-white/10 te        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(234, 179, 8, 0.5); 
-            border-radius: 4px;
-        }
-        .animate-spin-slow {
-            animation: spin 10s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .theme-transition {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        /* Glassmorphism utility */
-        .glass {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        input, textarea, button, select, a {
-            -webkit-tap-highlight-color: transparent;
-        }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
+                            <button onClick={onClose} className={`p-2 rounded-full ${theme === 'dark' ? 'bg-white/10 text-white' : 'bg-black/10 text-black'}`}>
+                                <Icon path={Icons.X} className="w-5 h-5" />
+                            </button>
+                        </div>
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+                        <div className="overflow-y-auto custom-scrollbar flex-grow p-4 pt-0">
+                            {loading ? (
+                                <div className="flex flex-col items-center justify-center h-64 gap-4">
+                                    <div className="animate-spin-slow text-4xl">🔮</div>
+                                    <p className={`font-bold animate-pulse ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Sto a legge le carte...</p>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-6 items-center pb-4">
+                                    
+                                    {/* --- CARD DA CATTURARE --- */}
+                                    <div 
+                                        ref={cardRef} 
+                                        className={`w-full p-6 rounded-2xl relative overflow-hidden flex flex-col gap-5 border-2 shadow-2xl ${theme === 'dark' ? 'bg-slate-900 border-yellow-600 text-white' : 'bg-orange-50 border-orange-400 text-slate-900'}`}
+                                    >
+                                        <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><span className="text-9xl">✨</span></div>
+                                        
+                                        <div className="flex items-center gap-3 border-b border-current/10 pb-4">
+                                            <div className="text-4xl">{data.mood.icon}</div>
+                                            <div>
+                                                <h2 className="text-3xl font-black uppercase leading-none tracking-tight">{sign.name}</h2>
+                                                <p className="text-xs font-bold opacity-60 uppercase">{sign.dates}</p>
+                                            </div>
+                                        </div>
 
-        // --- ICONE SVG (Inline per performance) ---
-        const Icon = ({ path, className, ...props }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} {...props}>
-                <path d={path} />
-            </svg>
-        );
+                                        <div className="relative">
+                                            <Icon path={Icons.Quote} className="w-6 h-6 opacity-20 absolute -top-3 -left-2" />
+                                            <p className="font-serif-display text-2xl leading-tight italic px-2">
+                                                "{data.text}"
+                                            </p>
+                                        </div>
 
-        const Icons = {
-            Sun: (p) => <Icon path="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" {...p} />,
-            Moon: (p) => <Icon path="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" {...p} />,
-            X: (p) => <Icon path="M18 6 6 18M6 6l12 12" {...p} />,
-            Share: (p) => <Icon path="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" {...p} />,
-            Calendar: (p) => <Icon path="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" {...p} />,
-            Check: (p) => <Icon path="M20 6 9 17l-5-5" {...p} />,
-            Sparkles: (p) => <Icon path="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" {...p} />,
-            Utensils: (p) => <Icon path="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2M7 2v20M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" {...p} />,
-            Dices: (p) => <Icon path="M2 10v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4M10 6v12M15 6h.01M18 9h.01M6 18h.01M10 14h.01" {...p} />,
-            Trophy: (p) => <Icon path="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2Z" {...p} />,
-            User: (p) => <Icon path="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" {...p} />,
-            Cookie: (p) => <Icon path="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5M8.5 8.5v.01M16 15.5v.01M12 12v.01M11 17v.01M7 14v.01" {...p} />,
-            Lightbulb: (p) => <Icon path="M15 14c.2-1 .7-1.7 1.5-2.5 1-1 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5M9 18h6M10 22h4" {...p} />,
-            Quote: (p) => <Icon path="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1zM15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z" {...p} />
-        };
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {[['Amore', data.stats.love, 'text-red-500'], ['Sordi', data.stats.work, 'text-blue-500'], ['Culo', data.stats.luck, 'text-green-500']].map(([l, v, c]) => (
+                                                <div key={l} className={`text-center p-2 rounded-lg ${theme === 'dark' ? 'bg-white/5' : 'bg-white/40'}`}>
+                                                    <div className={`text-lg font-black ${c}`}>{v}%</div>
+                                                    <div className="text-[9px] uppercase font-bold opacity-60">{l}</div>
+                                                </div>
+                                            ))}
+                                        </div>
 
-        const zodiacIcons = {
-          ariete: "M12 21a9 9 0 0 0 9-9h-9v9Zm0-9V3a9 9 0 0 0-9 9h9Zm0 0V7.5c0-1.5 3-4.5 4.5-4.5S21 6 21 7.5c0 3-4.5 4.5-4.5 4.5H12Zm0 0V7.5C12 6 9 3 7.5 3S3 6 3 7.5c0 3 4.5 4.5 4.5 4.5H12Z", 
-          toro: "M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0M12 12V6m-5-2a5 5 0 0 1 10 0",
-          gemelli: "M9 3v18M15 3v18M6 3h12M6 21h12",
-          cancro: "M6 12a6 6 0 1 0 12 0 6 6 0 1 0-12 0m0 0a6 6 0 1 1-12 0 6 6 0 1 1 12 0", 
-          leone: "M12 4a2 2 0 1 0-2 2 2 2 0 0 0 2-2m0 2c0 3-2 5-2 9s3 6 6 6 4-3 4-6-5-5-8-9",
-          vergine: "M4 4v16M4 12h4m0 0v8m0-8h4m0 0v8m0-4h4v4", 
-          bilancia: "M4 18h16M4 14h16M12 6c3 0 5 4 5 8H7c0-4 2-8 5-8",
-          scorpione: "M4 4v16M4 12h4m0 0v8m0-8h4m0 0v8m0-4h4v4l2 2", 
-          sagittario: "M5 19l14-14M19 5v8M19 5h-8M5 19l4 4", 
-          capricorno: "M4 6c0 4 2 6 5 6s4-4 4-8 4 6 4 10a4 4 0 1 1-8 0", 
-          acquario: "M3 10c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 16c2-2 4-2 6 0s4 2 6 0 4-2 6 0", 
-          pesci: "M12 3c-4 4-4 14 0 18M12 3c4 4 4 14 0 18M5 12h14"
-        };
+                                        <div className={`p-4 rounded-xl flex flex-col gap-3 ${theme === 'dark' ? 'bg-indigo-900/30 border border-indigo-500/30' : 'bg-indigo-50 border border-indigo-200'}`}>
+                                            <div className="flex items-start gap-3">
+                                                <Icon path={Icons.Lightbulb} className="w-5 h-5 shrink-0 opacity-70 mt-0.5" />
+                                                <div>
+                                                    <div className="text-[10px] uppercase font-bold opacity-60">Consiglio</div>
+                                                    <div className="text-sm font-bold leading-tight">{data.advice}</div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-start gap-3 pt-2 border-t border-current/10">
+                                                <Icon path={Icons.Utensils} className="w-5 h-5 shrink-0 opacity-70 mt-0.5" />
+                                                <div>
+                                                    <div className="text-[10px] uppercase font-bold opacity-60">Piatto del Giorno</div>
+                                                    <div className="text-sm font-bold leading-tight">{data.food}</div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-        const zodiacData = [
-          { id: 'ariete', name: 'Ariete', dates: '21 Mar - 19 Apr', element: 'Fuoco', icon: zodiacIcons.ariete },
-          { id: 'toro', name: 'Toro', dates: '20 Apr - 20 Mag', element: 'Terra', icon: zodiacIcons.toro },
-          { id: 'gemelli', name: 'Gemelli', dates: '21 Mag - 20 Giu', element: 'Aria', icon: zodiacIcons.gemelli },
-          { id: 'cancro', name: 'Cancro', dates: '21 Giu - 22 Lug', element: 'Acqua', icon: zodiacIcons.cancro },
-          { id: 'leone', name: 'Leone', dates: '23 Lug - 22 Ago', element: 'Fuoco', icon: zodiacIcons.leone },
-          { id: 'vergine', name: 'Vergine', dates: '23 Ago - 22 Set', element: 'Terra', icon: zodiacIcons.vergine },
-          { id: 'bilancia', name: 'Bilancia', dates: '23 Set - 22 Ott', element: 'Aria', icon: zodiacIcons.bilancia },
-          { id: 'scorpione', name: 'Scorpione', dates: '23 Ott - 21 Nov', element: 'Acqua', icon: zodiacIcons.scorpione },
-          { id: 'sagittario', name: 'Sagittario', dates: '22 Nov - 21 Dic', element: 'Fuoco', icon: zodiacIcons.sagittario },
-          { id: 'capricorno', name: 'Capricorno', dates: '22 Dic - 19 Gen', element: 'Terra', icon: zodiacIcons.capricorno },
-          { id: 'acquario', name: 'Acquario', dates: '20 Gen - 18 Feb', element: 'Aria', icon: zodiacIcons.acquario },
-          { id: 'pesci', name: 'Pesci', dates: '19 Feb - 20 Mar', element: 'Acqua', icon: zodiacIcons.pesci },
-        ];
+                                        <div className="flex justify-between items-end pt-2">
+                                            <div>
+                                                <div className="text-[9px] uppercase font-bold opacity-60">Numeri</div>
+                                                <div className="text-lg font-black tracking-widest">{data.numbers.join(' - ')}</div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-[9px] font-black uppercase tracking-widest opacity-40">Oroscopo Romano</div>
+                                                <div className="text-sm font-bold">astrivostri.com</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* --- FINE CARD CATTURA --- */}
 
-        // --- Logica e Dati ---
-
-        const getDailyRandom = (seedString) => {
-          let hash = 0;
-          for (let i = 0; i < seedString.length; i++) {
-            const char = seedString.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash;
-          }
-          return Math.abs(hash);
-        };
-
-        const getDailyStats = (signId) => {
-          const today = new Date().toISOString().slice(0, 10);
-          const seed = getDailyRandom(today + signId);
-          const love = (seed % 60) + 40;
-          const work = ((seed * 7) % 60) + 30;
-          const luck = ((seed * 13) % 60) + 20;
-          const total = love + work + luck;
-          return { love, work, luck, total };
-        };
-
-        const generateRanking = () => {
-          const ranking = zodiacData.map(sign => {
-            const stats = getDailyStats(sign.id);
-            return { ...sign, score: stats.total };
-          });
-          return ranking.sort((a, b) => b.score - a.score);
-        };
-
-        const generateRomanHoroscope = (sign, element) => {
-          const today = new Date().toISOString().slice(0, 10);
-          const seed = getDailyRandom(today + sign.id);
-          const stats = getDailyStats(sign.id);
-          
-          // --- VOCABOLARIO ESTESO ---
-          const intros = [
-            "Aò, stamme a sentì bene oggi:", "Allora, le carte dicono questo:", "Oggi butta in na maniera strana:", "Senti n'po' che t'aspetta:", "Dunque, la situazione è questa:",
-            "Nun te vojo mette ansia, ma...", "Apri bene le orecchie:", "Te lo dico cor core in mano:", "Er cielo oggi parla chiaro:", "Manco a dillo, oggi è così:",
-            "Se fossi in te, oggi starei attento:", "Guarda, l'astri oggi so' 'n po' brilli:", "Ho visto le stelle e m'hanno detto:", "Amico mio, oggi è 'na giornata particolare:", "Non so come dirtelo, ma:",
-            "Oggi er destino t'ha preso di mira:", "Famo a capisse, oggi va così:", "Senti che roba oggi:", "Me sa che oggi te tocca remà:", "L'oroscopo tuo oggi è 'n film:",
-            "Aho, svejate che le stelle so' già operative:", "Te sei alzato cor piede giusto? Speramo:", "Er monno gira, e tu giri co lui:", "Vedi de non fa casini oggi:", "Oggi c'hai Saturno che te guarda male:",
-            "Giove t'ha mandato n'messaggio su WhatsApp:", "Venere t'ha bloccato, ma Marte te segue:", "Ascolta er consiglio der vecchio Gigi:", "Mettite seduto che te devo dì na cosa:", "Oggi è er giorno tuo... o forse no:",
-            "Daje che oggi spacchi (o vieni spaccato):", "Er cielo sopra Roma dice che:", "Le costellazioni s'hanno fatto na riunione su de te:", "Oggi er karma t'ha messo 'n lista d'attesa:", "Senti 'sta profezia, fresca fresca:",
-            "Nun te lamentà prima de sentì:", "Sei pronto? Allora senti qua:", "Oggi l'universo c'ha n'piano pe te:", "Forse era mejo se restavi a letto, ma vabbè:", "Oggi c'hai n'aura potente, pure troppo:",
-            "Senti 'sto presagio romano:", "L'oracolo ha parlato (e ha ruttato):", "Stamme a sentì, che me pare importante:", "Oggi l'aria tira così:", "Nun fa quella faccia, senti qua:"
-          ];
-
-          const middles = [
-            "te senti carico a pallettoni, pronto a sfonnà tutto.", "la pazienza te sta a salutà co la manina.", "l'amore è n'calesse, se non te sbrighi a salì rimani a piedi.", "er lavoro te stressa ma i sordi, forse, arrivano.",
-            "meglio che te stai zitto oggi, che ogni parola è na condanna.", "fai er bravo, che er karma te guarda.", "hai la testa dura come i sampietrini de Piazza Venezia.", "te senti solo come n'gabbiano ar Gianicolo.",
-            "c'hai n'energia che potresti illuminà er Raccordo Anulare.", "la gente te cerca, ma tu voj solo stà sul divano.", "occhio a chi te sorride, che magari vole solo scroccà er caffè.", "l'amore oggi è come la metro C: non se sa quando arriva.",
-            "oggi sei acido come lo yogurt scaduto, fatte na risata.", "sei dolce come er maritozzo, ma occhio alla glicemia.", "c'hai più dubbi te che Amleto in fila alle poste.", "te senti un gladiatore, ma stai attento ai leoni.",
-            "oggi n'te va bene niente, manco se te regalano i sordi.", "sei confuso come n'turista a Termini.", "c'hai na voglia de lavorà che saltame addosso.", "er partner te sta a studià, vedi de non fallì l'esame.",
-            `essendo de ${element}, oggi bruci come l'asfalto d'agosto.`, `visto che sei de ${element}, te senti fluido ma occhio a non scivolà.`, `col tuo segno ${element}, oggi voli alto ma attento ai piccioni.`, `da bravo segno de ${element}, sei concreto come n'mattone forato.`,
-            "oggi c'hai la luna storta e er sole pure peggio.", "se pensi de avè ragione, ricordate che pure i matti so convinti.", "fai pace cor cervello prima de parlà.", "l'opportunità bussa, ma tu stavi in bagno.",
-            "c'è n'aria de cambiamento, o forse hai solo lasciato la finestra aperta.", "te senti n'po' poeta e n'po' muratore oggi.", "la fortuna te gira intorno, acchiappala ar volo.", "oggi sei magnetico, attiri pure le multe.",
-            "se devi fa na scelta, tira la monetina che è mejo.", "non te fidà manco de te stesso oggi.", "c'hai er fascino de n'attore de Cinecittà.", "oggi sei più lento de l'autobus notturno.",
-            "te senti n'po' Sora Lella e n'po' Verdone.", "la giornata promette bene, mantieni la calma e gesso.", "se ridi oggi, ridi domani, ridi sempre.", "oggi er core tuo batte forte, sarà amore o tachicardia?",
-            "hai bisogno de n'abbraccio o de n'bonifico, decidi te.", "la creatività te scorre nelle vene tipo vino.", "oggi risolvi tutto co n'alzata de spalle.", "sei testardo ma c'hai n'core grande così.",
-            "la vita è na ruota, e oggi te tocca stà sotto.", "ma che t'hanno fatto? Pari n'cero votivo.", "oggi splendi, ma ricordate gli occhiali da sole.", "l'amore te sorride, ma c'ha i denti sporchi de spinaci.",
-            "sei n'mistero pure pe te stesso oggi.", "la tua simpatia oggi è contagiosa, tipo influenza.",
-            "oggi pari na statua de marmo, freddo ma bello.", "l'ansia oggi te magna vivo, respira.", "c'hai la grinta de n'leone a dieta."
-          ];
-
-          const outros = [
-            "Daje tutta!", "E se va male... c'è sempre la Carbonara.", "Volemose bene, che la vita è corta.", "Fusse che fusse la vorta bbona!", "Forza e coraggio, che er male è di passaggio.",
-            "Bona, ho detto tutto.", "Mo vedi tu che devi fa.", "E ricordate: chi se fa li fatti sua campa cent'anni.", "Daje, che domani è n'artro giorno.", "Stacce.",
-            "E non te scordà de soride.", "Vai e spacca tutto (metaforicamente eh).", "Speramo bene.", "Vattelapesca.", "E come diceva er nonno: magna e fregatene.",
-            "Pija la vita come viene.", "Sei forte, ricordatelo.", "Mò statte bono.", "Chiudi l'occhi e spera.", "Arrivederci e grazie.",
-            "Nun mollà manco de n'centimetro.", "A la prossima puntata.", "Che la forza (e la porchetta) sia con te.", "Statte accorto.", "Daje de tacco, daje de punta.",
-            "E se caschi, rialzate e fai finta de niente.", "Ma che te lo dico a fa?", "Buona fortuna, ne hai bisogno.", "T'ho detto tutto, mo so cavoli tui.", "Ciao core.",
-            "E mo vedi de non fa danni.", "Vai in pace.", "Passo e chiudo.", "Amen.", "Daje Roma Daje (sempre)."
-          ];
-
-          const advices = [
-            "Lassa perde WhatsApp pe oggi, fai 'na chiamata vera.", "Oggi offri er caffè a n'amico, te porta bene.", "Se t'incazzi, conta fino a dieci... poi mannali a quel paese.", 
-            "Fatte 'na passeggiata ar centro, te ripija l'anima.", "Evita de discute cor capo, faje 'sì sì' co la testa.", "Compra n'Gratta e Vinci, ma solo uno eh.",
-            "Stasera niente Netflix, esci a respirà aria de Roma.", "Se vedi n'gatto nero, faje na carezza, so tutte cavolate.", "Mettite n'vestito che te piace, fatte bello pe te.",
-            "Nun te fidà de chi te dice 'te chiamo io'.", "Chiama tu madre, che je fa piacere.", "Smetti de guardà er telefono a tavola.", 
-            "Fai un respiro profondo e pensa 'ma chissene'.", "Oggi dì de no se non te va, e sticazzi.", "Sorridi ar fornaio, magari te da er pezzo più bono.",
-            "Guarda dove metti i piedi, che le buche so' tante.", "Nun te magnà le unghie, magnate na pizzetta.", "Fai pace co quello che t'ha fatto sbroccà ieri.",
-            "Pija la vita con filosofia (romana).", "Ricordate che i problemi d'oggi domani so ricordi."
-          ];
-
-          const foods = [
-            "Rigatoni alla Carbonara", "Tonnarelli Cacio e Pepe", "Bucatini all'Amatriciana", "Pasta alla Gricia", "Coda alla Vaccinara",
-            "Abbacchio a scottadito", "Carciofi alla Giudia", "Trippa alla Romana", "Supplì al telefono", "Maritozzo con la panna",
-            "Pizza e Mortazza", "Saltimbocca alla Romana", "Puntarelle con le alici", "Filetti di Baccalà fritti", "Pajata",
-            "Vignarola (se è stagione)", "Pollo coi peperoni", "Gnocchi alla Romana", "Fave e Pecorino", "Crostata di Visciole",
-            "Grattachecca", "Pizza Bianca (scrocchiarella)", "Porchetta di Ariccia", "Fagioli con le cotiche", "Pizzette rosse"
-          ];
-
-          const moods = [
-            { icon: "🤯", label: "Esaurito" }, { icon: "🥳", label: "In Festa" }, { icon: "😴", label: "Abbioccato" }, { icon: "🤬", label: "Nerissimo" },
-            { icon: "🤩", label: "Stellare" }, { icon: "🥶", label: "Ghiacciato" }, { icon: "🌶️", label: "Piccante" }, { icon: "💸", label: "Al verde" },
-            { icon: "👀", label: "Guardingo" }, { icon: "🦁", label: "Leone" }, { icon: "🦄", label: "Magico" }, { icon: "🌪️", label: "Caotico" },
-            { icon: "🔋", label: "Carico" }, { icon: "🪫", label: "Scarico" }, { icon: "🍝", label: "Affamato" }, { icon: "🍷", label: "'Mbriaco" }
-          ];
-
-          const i1 = seed % intros.length;
-          const i2 = (seed * 7 + 13) % middles.length; 
-          const i3 = (seed * 3 + 7) % outros.length;
-          const adviceIndex = (seed * 11) % advices.length;
-          const foodIndex = (seed * 17) % foods.length;
-          const moodIndex = (seed * 23) % moods.length;
-
-          const n1 = (seed % 90) + 1;
-          const n2 = ((seed * 5) % 90) + 1;
-          const n3 = ((seed * 11) % 90) + 1;
-
-          return {
-            text: `${intros[i1]} ${middles[i2]} ${outros[i3]}`,
-            stats: stats,
-            advice: advices[adviceIndex],
-            food: foods[foodIndex],
-            numbers: [n1, n2, n3],
-            mood: moods[moodIndex]
-          };
-        };
-
-        // --- COMPONENTI UI ---
-
-        const StarField = ({ theme }) => {
-          const stars = useMemo(() => {
-            return [...Array(60)].map((_, i) => ({
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: `${Math.random() * 3 + 1}px`,
-              height: `${Math.random() * 3 + 1}px`,
-              animationDuration: `${Math.random() * 3 + 1}s`,
-              animationDelay: `${Math.random() * 2}s`
-            }));
-          }, []);
-
-          const starClass = theme === 'dark' 
-            ? 'bg-white shadow-[0_0_2px_#fff]' 
-            : 'bg-yellow-500 shadow-[0_0_2px_#fbbf24]';
-
-          return (
-            <div className={`fixed inset-0 z-0 pointer-events-none overflow-hidden theme-transition ${theme === 'dark' ? 'bg-slate-950' : 'bg-orange-50'}`}>
-              <div className={`absolute inset-0 bg-gradient-to-b ${theme === 'dark' ? 'from-slate-950 via-indigo-950/20 to-slate-950' : 'from-orange-50 via-yellow-100/30 to-orange-50'}`}></div>
-              {stars.map((star, i) => (
-                <div
-                  key={i}
-                  className={`absolute rounded-full opacity-60 animate-pulse ${starClass} theme-transition`}
-                  style={star}
-                />
-              ))}
-            </div>
-          );
-        };
-
-        const Logo = () => (
-          <div className="relative group cursor-pointer">
-            <div className="absolute inset-0 bg-orange-500 blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 rounded-full"></div>
-            <div className="relative bg-gradient-to-br from-yellow-400 to-orange-600 p-3 rounded-2xl shadow-xl shadow-orange-500/20 transform transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
-              <div className="relative w-8 h-8 md:w-10 md:h-10">
-                <Icons.Sun className="absolute inset-0 w-full h-full text-white animate-[spin_10s_linear_infinite]" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                     <span className="text-xs md:text-sm font-black text-orange-900 animate-pulse">AV</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-        const NetworkBanner = ({ theme }) => {
-            const phrases = [
-                "Se questo t'ha detto male, prova su",
-                "Te senti sfigato? Vai su",
-                "Gigi c'ha i cugini: ",
-                "Pe artre perle de saggezza:",
-                "Se voj sapè de più su Roma:"
-            ];
-            const [phrase, setPhrase] = useState(phrases[0]);
-
-            useEffect(() => {
-                setPhrase(phrases[Math.floor(Math.random() * phrases.length)]);
-            }, []);
-
-            return (
-                <div className={`mt-8 p-4 rounded-xl border text-center text-xs md:text-sm theme-transition ${theme === 'dark' ? 'bg-slate-900/50 border-white/5 text-slate-400' : 'bg-white/50 border-orange-200 text-slate-600'}`}>
-                    <p className="mb-2 font-medium">{phrase}</p>
-                    <div className="flex flex-wrap justify-center gap-3">
-                        <a href="#" className="font-bold text-yellow-500 hover:underline">oracoloderoma.com</a>
-                        <span className="opacity-50">|</span>
-                        <a href="#" className="font-bold text-red-500 hover:underline">ammazzachesfiga.com</a>
+                                    <button 
+                                        onClick={handleShareImage}
+                                        disabled={isCapturing}
+                                        className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transform transition active:scale-95 shadow-lg ${theme === 'dark' ? 'bg-yellow-500 text-slate-900 hover:bg-yellow-400' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+                                    >
+                                        {isCapturing ? <span className="animate-pulse">Sto a stampà...</span> : <><Icon path={Icons.Camera} className="w-5 h-5" /> Condividi Immagine</>}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             );
-        };
-
-        const Header = ({ savedSign, onOpenSaved, theme, toggleTheme }) => {
-            const generateSubtitle = () => {
-                const partsA = ["L'Astri vostri", "L'oroscopo de Roma", "Er destino tuo", "Le stelle parlano", "Gigi te dice", "La verità", "Er cielo sopra Roma", "Le previsioni", "Er cosmo", "Tutto quello che c'è da sapè", "La saggezza antica", "Er futuro", "Quello che t'aspetta", "Le carte dicono", "Sopra ar Cuppolone"];
-                const partsB = ["e di chi ve li manna", "senza peli sulla lingua", "più verace de la carbonara", "scritto sui sampietrini", "che non ce gira intorno", "tra un supplì e na birra", "che manco tu madre", "co la benedizione daa Lupa", "che te guarda e te giudica", "senza filtri né inganni", "che non fa sconti", "più schietto de n'oste", "che te legge dentro", "che ne sa una più der diavolo", "co la precisione der traffico"];
-                const partsC = [", e stacce.", ", pane ar pane, vino ar vino.", ", alla faccia de la sfiga.", ", pure se Saturno rosica.", ", e se non te piace, ciao.", ", garantito ar limone.", ", e bona notte ai sonatori.", ", cor core in mano.", ", e daje tutta.", ", e speramo bene.", ", e chi s'è visto s'è visto.", ", parola de Gigi.", ", e mo so cavoli tui.", ", come te pare a te.", ", e volemose bene."];
-                
-                return `${partsA[Math.floor(Math.random() * partsA.length)]} ${partsB[Math.floor(Math.random() * partsB.length)]}${partsC[Math.floor(Math.random() * partsC.length)]}`;
-            };
-
-            const [subtitle, setSubtitle] = useState("");
-
-            useEffect(() => {
-                setSubtitle(generateSubtitle());
-            }, []);
-
-            return (
-              <nav className={`relative z-10 flex flex-col md:flex-row justify-between items-center p-4 md:p-6 border-b backdrop-blur-md sticky top-0 shadow-lg gap-4 md:gap-0 transition-all theme-transition ${theme === 'dark' ? 'bg-slate-950/80 border-white/5' : 'bg-orange-50/80 border-orange-200'}`}>
-                <div className="flex items-center gap-4">
-                  <Logo />
-                  <div className="text-left">
-                    <h1 className="text-2xl md:text-3xl font-black italic bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 via-orange-500 to-red-600 tracking-tighter leading-none filter drop-shadow-sm">
-                      AstriVostri
-                    </h1>
-                    <p className={`text-[10px] md:text-xs font-bold uppercase tracking-widest mt-1 theme-transition ${theme === 'dark' ? 'text-orange-200/70' : 'text-orange-800/70'}`}>
-                      {subtitle}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  {savedSign && (
-                    <button 
-                      onClick={onOpenSaved}
-                      className={`group flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm theme-transition ${theme === 'dark' ? 'bg-white/5 hover:bg-white/10 text-slate-300 border-white/5' : 'bg-white hover:bg-orange-100 text-slate-700 border-orange-200'}`}
-                    >
-                      <div className="bg-yellow-500/20 p-1 rounded-full group-hover:bg-yellow-500/40 transition-colors">
-                         <Icons.User className="w-3 h-3" />
-                      </div>
-                      <span>{savedSign}</span>
-                    </button>
-                  )}
-                  <button 
-                    onClick={toggleTheme}
-                    className={`p-2 rounded-full transition-all border shadow-sm theme-transition ${theme === 'dark' ? 'bg-slate-800 text-yellow-400 border-slate-700 hover:bg-slate-700' : 'bg-white text-slate-600 border-orange-200 hover:bg-orange-100'}`}
-                  >
-                    {theme === 'dark' ? <Icons.Sun className="w-5 h-5" /> : <Icons.Moon className="w-5 h-5" />}
-                  </button>
-                </div>
-              </nav>
-            );
-        };
-
-        const CookieBanner = ({ theme }) => {
-          const [isVisible, setIsVisible] = useState(false);
-
-          useEffect(() => {
-            const accepted = localStorage.getItem('cookieAccepted');
-            if (!accepted) {
-              const timer = setTimeout(() => setIsVisible(true), 1500);
-              return () => clearTimeout(timer);
-            }
-          }, []);
-
-          const acceptCookies = () => {
-            localStorage.setItem('cookieAccepted', 'true');
-            setIsVisible(false);
-          };
-
-          if (!isVisible) return null;
-
-          return (
-            <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-in slide-in-from-bottom-full duration-500">
-              <div className={`max-w-4xl mx-auto backdrop-blur-md border rounded-2xl p-4 md:p-6 shadow-2xl flex flex-col md:flex-row items-center gap-4 md:gap-8 theme-transition ${theme === 'dark' ? 'bg-slate-900/95 border-yellow-500/30 shadow-black' : 'bg-white/95 border-orange-200 shadow-orange-900/20'}`}>
-                <div className="bg-yellow-500/20 p-3 rounded-full shrink-0 animate-bounce">
-                  <Icons.Cookie className="w-8 h-8 text-yellow-500" />
-                </div>
-                <div className="flex-grow text-center md:text-left">
-                  <h4 className={`font-bold text-lg mb-1 theme-transition ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>Aò, i biscotti! (Cookies)</h4>
-                  <p className={`text-xs md:text-sm leading-relaxed theme-transition ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Usamo i cookie solo pe' salvà er segno tuo e er tema, così nun devi cliccà ogni volta. Niente tracciamenti strani, giuro su mi madre.
-                  </p>
-                </div>
-                <div className="flex gap-3 w-full md:w-auto shrink-0">
-                   <button 
-                     onClick={acceptCookies}
-                     className="flex-1 md:flex-none bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold py-3 px-6 rounded-xl transition-all shadow-lg transform active:scale-95"
-                   >
-                     Me fido, Daje
-                   </button>
-                </div>
-              </div>
-            </div>
-          );
-        };
-
-        const Ranking = ({ theme }) => {
-          const ranking = useMemo(() => generateRanking(), []);
-          
-          return (
-            <div className="max-w-md mx-auto mb-12 px-4">
-              <div className={`border rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden theme-transition ${theme === 'dark' ? 'bg-slate-900/80 border-yellow-500/20' : 'bg-white/60 border-orange-200'}`}>
-                <div className="absolute -right-10 -top-10 w-32 h-32 bg-yellow-500/5 rounded-full blur-2xl"></div>
-                
-                <div className="flex items-center justify-center gap-2 mb-5 font-black uppercase tracking-widest text-xs relative z-10 theme-transition text-yellow-500">
-                  <Icons.Trophy className="w-4 h-4" />
-                  <span>La Classifica de Oggi</span>
-                </div>
-                
-                <div className="space-y-3 relative z-10">
-                  {/* Top 1 */}
-                  <div className={`flex items-center justify-between bg-gradient-to-r p-3 rounded-xl border-l-4 border-yellow-500 shadow-lg transition-transform hover:scale-[1.02] theme-transition ${theme === 'dark' ? 'from-yellow-500/20 to-transparent shadow-yellow-900/10' : 'from-yellow-100 to-transparent shadow-orange-200/50'}`}>
-                    <div className="flex items-center gap-3">
-                      <div className="bg-yellow-500 text-slate-900 w-6 h-6 rounded-full flex items-center justify-center font-black text-xs">1</div>
-                      <span className={`font-bold text-lg theme-transition ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{ranking[0].name}</span>
-                    </div>
-                    <Icons.ArrowUp className="w-5 h-5 text-green-500 animate-bounce" />
-                  </div>
-
-                  {/* Top 2 */}
-                  <div className={`flex items-center justify-between p-2 rounded-lg border-l-4 border-slate-400 transition-colors theme-transition ${theme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:bg-slate-50 border-slate-300'}`}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold text-slate-400 w-6 text-center">2</span>
-                      <span className={`font-medium theme-transition ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>{ranking[1].name}</span>
-                    </div>
-                  </div>
-
-                   {/* Top 3 */}
-                   <div className={`flex items-center justify-between p-2 rounded-lg border-l-4 border-orange-700 transition-colors theme-transition ${theme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:bg-orange-50 border-orange-300'}`}>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-bold text-orange-700 w-6 text-center">3</span>
-                      <span className={`font-medium theme-transition ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>{ranking[2].name}</span>
-                    </div>
-                  </div>
-
-                  <div className="text-center text-[10px] text-slate-500 pt-2 font-medium flex items-center justify-center gap-1">
-                     ...e ultimo posto pe' <strong className="text-red-500">{ranking[ranking.length - 1].name}</strong> <Icons.ArrowDown className="w-3 h-3 text-red-500"/>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
         };
 
         const Hero = ({ theme }) => {
-          const today = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
-          const [phrase, setPhrase] = useState("");
+            const today = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+            const [phrase, setPhrase] = useState("");
 
-          useEffect(() => {
-            const heroPhrases = ["Sceji er segno tuo. Senza giri de parole, pane ar pane e vino ar vino.", "Clicca sur segno tuo e scopri se oggi devi ride o devi piagne.", "Non è vero ma ce credo. O forse sì. Vabbè, tu clicca.", "L'unico oroscopo che non te manna a dì. Schietto e sincero.", "Sei pronto a sentì la verità? O preferisci le bugie de l'altri?", "Daje, sbrigati a cliccà che le stelle non aspettano nessuno.", "Er destino è scritto, ma noi glie damo n'occhiata prima.", "Oggi le stelle c'hanno la luna storta o te sorridono? Scoprilo.", "Mettite comodo, pjate 'n caffè e leggi che t'ho preparato.", "Nessun algoritmo, solo pura saggezza (e un po' de fortuna)."];
-            setPhrase(heroPhrases[Math.floor(Math.random() * heroPhrases.length)]);
-          }, []);
-          
-          return (
-            <div className="relative z-10 text-center py-10 px-4">
-              <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-bold mb-6 shadow-xl uppercase tracking-wider backdrop-blur-md cursor-default ${theme === 'dark' ? 'bg-slate-800/80 border-slate-700 text-slate-300' : 'bg-white/80 border-orange-200 text-slate-600'}`}>
-                <Icons.Calendar className="w-3 h-3 text-yellow-500" />
-                <span className="capitalize">{today}</span>
-              </div>
-              <h1 className="text-5xl md:text-7xl font-black mb-4 tracking-tight drop-shadow-2xl text-transparent bg-clip-text bg-gradient-to-tr from-yellow-400 to-orange-600">
-                AstriVostri<span className={theme === 'dark' ? 'text-white' : 'text-slate-800'}>.com</span>
-              </h1>
-              <p className={`text-lg md:text-xl max-w-xl mx-auto mb-8 font-medium italic px-4 leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>"{phrase}"</p>
-            </div>
-          );
-        };
-
-        const HoroscopeModal = ({ sign, isOpen, onClose, theme }) => {
-          const [loading, setLoading] = useState(true);
-          const [data, setData] = useState(null);
-          const [progress, setProgress] = useState(0);
-          const [copied, setCopied] = useState(false);
-          const [loadingText, setLoadingText] = useState("");
-
-          useEffect(() => {
-            if (isOpen) {
-              setLoading(true);
-              setProgress(0);
-              setData(null);
-              setCopied(false);
-              const phrases = ["Sto a chiede a Sora Lella...", "Sto a sentì Albertone...", "Mandrake sta a mischià le carte...", "Nerone sta a accenne er foco...", "Sto a consultà l'antichi...", "Er Papa sta a guardà le stelle..."];
-              setLoadingText(phrases[0]);
-
-              localStorage.setItem('savedSignId', sign.id);
-
-              let phraseIndex = 0;
-              const textInterval = setInterval(() => {
-                phraseIndex = (phraseIndex + 1) % phrases.length;
-                setLoadingText(phrases[phraseIndex]);
-              }, 800);
-
-              const interval = setInterval(() => {
-                setProgress(prev => {
-                  if (prev >= 100) {
-                    clearInterval(interval);
-                    clearInterval(textInterval);
-                    return 100;
-                  }
-                  return prev + 4;
-                });
-              }, 80);
-
-              setTimeout(() => {
-                setData(generateRomanHoroscope(sign, sign.element));
-                setLoading(false);
-              }, 2500);
-
-              return () => {
-                clearInterval(interval);
-                clearInterval(textInterval);
-              };
-            }
-          }, [isOpen, sign]);
-
-          const handleShare = async () => {
-            if (!data) return;
-
-            const text = `🔥 ${sign.name.toUpperCase()} secunno GIGI 🔥\n\n"${data.text}"\n\n💡 Consiglio: ${data.advice}\n🍝 Magna: ${data.food}\n🍀 Numeri: ${data.numbers.join('-')}\n\n👉 Leggi er tuo su AstriVostri.com`;
-            
-            try {
-                if (navigator.share) {
-                    await navigator.share({
-                        title: 'AstriVostri',
-                        text: text,
-                        url: 'https://astrivostri.com'
-                    });
-                } else {
-                    throw new Error("Web Share not supported");
-                }
-            } catch (err) {
-                // Fallback robusto
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.position = "fixed";
-                textArea.style.left = "-9999px";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2500);
-                } catch (e) {
-                    alert("Aò, nun riesco a copià. Fallo a mano!");
-                }
-                document.body.removeChild(textArea);
-            }
-          };
-
-          if (!isOpen || !sign) return null;
-
-          return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className="absolute inset-0 bg-black/90 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose} />
-              
-              <div className={`relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-300 theme-transition border ${theme === 'dark' ? 'bg-slate-900 border-slate-700' : 'bg-orange-50 border-orange-200'}`}>
+            useEffect(() => {
+                // GENERATORE SOTTOTITOLO INFINITO
+                const part1 = ["Sceji er segno tuo.", "Vedi che dice er destino.", "Oggi ridi o piagni?", "Le stelle non mentono.", "Aò, che voi sapè?", "Er cielo sopra Roma.", "Oroscopo sincero.", "Mettite comodo.", "Nun c'è trucco."];
+                const part2 = ["Senza giri de parole.", "Pane ar pane, vino ar vino.", "Se te dice male, ridi.", "Manco Fox ce pija così.", "Tutto scritto, forse.", "Daje de tacco.", "Verità assoluta (quasi).", "Poche chiacchiere.", "Diretto e verace."];
+                const part3 = ["E stacce.", "E nun te lamentà.", "E se non te piace, ciao.", "Garantito ar limone.", "Fidate de me.", "E speramo bene.", "E volemose bene.", "E bona così."];
                 
-                {/* Header */}
-                <div className={`p-4 flex justify-between items-center border-b shrink-0 theme-transition ${theme === 'dark' ? 'bg-slate-800/50 border-white/5' : 'bg-white/50 border-orange-200'}`}>
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-xl bg-gradient-to-br shadow-inner ${sign.element === 'Fuoco' ? 'from-orange-500 to-red-600' : sign.element === 'Acqua' ? 'from-blue-500 to-cyan-600' : sign.element === 'Aria' ? 'from-indigo-400 to-purple-500' : 'from-emerald-500 to-green-600'}`}>
-                      <Icons.Sun className="w-6 h-6 text-white" />
+                const r1 = part1[Math.floor(Math.random() * part1.length)];
+                const r2 = part2[Math.floor(Math.random() * part2.length)];
+                const r3 = part3[Math.floor(Math.random() * part3.length)];
+                
+                setPhrase(`${r1} ${r2} ${r3}`);
+            }, []);
+            
+            return (
+                <div className="relative z-10 text-center py-10 px-4">
+                    <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-bold mb-6 shadow-xl uppercase tracking-wider backdrop-blur-md cursor-default ${theme === 'dark' ? 'bg-slate-800/80 border-slate-700 text-slate-300' : 'bg-white/80 border-orange-200 text-slate-600'}`}>
+                        <Icon path={Icons.Sun} className="w-3 h-3 text-yellow-500" />
+                        <span className="capitalize">{today}</span>
                     </div>
-                    <div>
-                      <h3 className={`text-xl font-black tracking-wide uppercase ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{sign.name}</h3>
-                      <p className={`text-xs font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{sign.dates}</p>
-                    </div>
-                  </div>
-                  <button onClick={onClose} className={`p-2 rounded-full ${theme === 'dark' ? 'text-slate-400 hover:bg-white/10' : 'text-slate-500 hover:bg-black/5'}`}>
-                    <Icons.X className="w-6 h-6" />
-                  </button>
+                    <h1 className="text-5xl md:text-7xl font-black mb-4 tracking-tight drop-shadow-2xl text-transparent bg-clip-text bg-gradient-to-tr from-yellow-400 to-orange-600">
+                        AstriVostri<span className={theme === 'dark' ? 'text-white' : 'text-slate-800'}>.com</span>
+                    </h1>
+                    <p className={`text-lg md:text-xl max-w-xl mx-auto mb-8 font-medium italic px-4 leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>"{phrase}"</p>
                 </div>
-
-                {/* Body */}
-                <div className={`p-6 overflow-y-auto custom-scrollbar flex-grow relative ${theme === 'dark' ? 'bg-slate-900' : 'bg-orange-50'}`}>
-                  {loading ? (
-                    <div className="text-center py-10 space-y-6">
-                      <div className="relative inline-block">
-                        <Icons.Moon className="w-16 h-16 text-yellow-500 mx-auto animate-bounce" />
-                        <Icons.Sparkles className={`w-6 h-6 absolute -top-2 -right-2 animate-pulse ${theme === 'dark' ? 'text-white' : 'text-orange-500'}`} />
-                      </div>
-                      <div>
-                        <p className="text-yellow-500 font-bold text-lg animate-pulse h-8">{loadingText}</p>
-                        <div className={`w-full max-w-[200px] mx-auto h-2 rounded-full overflow-hidden border mt-2 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-orange-100 border-orange-200'}`}>
-                          <div className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-300 ease-out" style={{ width: `${progress}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                      
-                      {/* Social Card Look */}
-                      <div className={`rounded-2xl p-6 border relative overflow-hidden ${theme === 'dark' ? 'bg-gradient-to-br from-slate-800 to-slate-900 border-white/10' : 'bg-gradient-to-br from-white to-orange-50 border-orange-100 shadow-sm'}`}>
-                          <div className="absolute top-0 right-0 p-4 opacity-10"><Icons.Sparkles className="w-20 h-20" /></div>
-                          
-                          {/* Mood */}
-                          <div className="flex items-center gap-2 mb-4">
-                              <span className="text-3xl">{data.mood.icon}</span>
-                              <div>
-                                  <div className="text-[10px] uppercase font-bold opacity-60">Mood</div>
-                                  <div className={`font-black ${theme === 'dark' ? 'text-yellow-400' : 'text-orange-600'}`}>{data.mood.label}</div>
-                              </div>
-                          </div>
-
-                          {/* Text */}
-                          <div className="relative z-10">
-                              <Icons.Quote className="w-8 h-8 opacity-10 absolute -top-4 -left-2" />
-                              <p className={`text-lg font-medium italic leading-relaxed ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
-                                "{data.text}"
-                              </p>
-                          </div>
-                      </div>
-
-                      {/* Stats */}
-                      <div className="grid grid-cols-3 gap-2">
-                        {[['Amore', data.stats.love, 'text-red-500'], ['Sordi', data.stats.work, 'text-blue-500'], ['Culo', data.stats.luck, 'text-green-500']].map(([label, val, color]) => (
-                            <div key={label} className={`text-center p-2 rounded-xl border ${theme === 'dark' ? 'bg-slate-800/40 border-white/5' : 'bg-white border-orange-100'}`}>
-                                <div className={`text-xl font-black ${color}`}>{val}%</div>
-                                <div className="text-[10px] opacity-60 font-bold uppercase">{label}</div>
-                            </div>
-                        ))}
-                      </div>
-
-                      {/* Consiglio */}
-                      <div className={`p-4 rounded-xl border flex items-start gap-3 ${theme === 'dark' ? 'bg-indigo-900/20 border-indigo-500/30' : 'bg-indigo-50 border-indigo-100'}`}>
-                          <Icons.Lightbulb className="w-6 h-6 text-indigo-400 shrink-0 mt-1" />
-                          <div>
-                              <div className="text-[10px] font-bold uppercase tracking-wider opacity-70 mb-1">Er Consiglio de Gigi</div>
-                              <p className={`text-sm font-bold ${theme === 'dark' ? 'text-indigo-100' : 'text-indigo-900'}`}>{data.advice}</p>
-                          </div>
-                      </div>
-
-                      {/* Food & Numbers */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className={`p-3 rounded-xl border text-center ${theme === 'dark' ? 'bg-slate-800/40 border-white/5' : 'bg-white border-orange-100'}`}>
-                          <div className="flex justify-center mb-1 text-orange-500"><Icons.Utensils className="w-4 h-4" /></div>
-                          <div className="text-[10px] opacity-60 font-bold uppercase">Er Piatto</div>
-                          <div className="text-xs font-bold mt-1">{data.food}</div>
-                        </div>
-                        <div className={`p-3 rounded-xl border text-center ${theme === 'dark' ? 'bg-slate-800/40 border-white/5' : 'bg-white border-orange-100'}`}>
-                          <div className="flex justify-center mb-1 text-yellow-500"><Icons.Dices className="w-4 h-4" /></div>
-                          <div className="text-[10px] opacity-60 font-bold uppercase">I Numeri</div>
-                          <div className="flex justify-center gap-1 mt-1">
-                              {data.numbers.map(n => <span key={n} className={`text-xs font-bold px-1.5 py-0.5 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-orange-100 text-orange-800'}`}>{n}</span>)}
-                          </div>
-                        </div>
-                      </div>
-
-                      <button onClick={handleShare} className={`w-full font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all transform hover:scale-[1.02] shadow-lg active:scale-95 ${copied ? 'bg-green-600 text-white' : 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white'}`}>
-                        {copied ? <Icons.Check className="w-5 h-5" /> : <Icons.Share className="w-5 h-5" />}
-                        <span>{copied ? "COPIATO! MO INCOLLALO" : "CONDIVIDI CO L'AMICI"}</span>
-                      </button>
-
-                      <NetworkBanner theme={theme} />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
+            );
         };
 
         const App = () => {
-          const [selectedSign, setSelectedSign] = useState(null);
-          const [savedSignName, setSavedSignName] = useState(null);
-          const [theme, setTheme] = useState('dark');
+            const [selectedSign, setSelectedSign] = useState(null);
+            const [theme, setTheme] = useState('dark');
+            const [networkMsg, setNetworkMsg] = useState("");
 
-          useEffect(() => {
-            const savedId = localStorage.getItem('savedSignId');
-            if (savedId) {
-              const sign = zodiacData.find(s => s.id === savedId);
-              if (sign) setSavedSignName(sign.name);
-            }
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme) setTheme(savedTheme);
-          }, [selectedSign]); 
+            useEffect(() => {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) setTheme('light');
+                
+                const nets = ["Se te senti sfigato vai su", "Consigliamo pure", "I cugini de campagna (e de oroscopo):", "Se cerchi artre risposte:", "Er network nostro:"];
+                setNetworkMsg(nets[Math.floor(Math.random() * nets.length)]);
+            }, []);
 
-          const handleOpenSaved = () => {
-            const savedId = localStorage.getItem('savedSignId');
-            const sign = zodiacData.find(s => s.id === savedId);
-            if (sign) setSelectedSign(sign);
-          };
+            return (
+                <div className={`min-h-screen font-sans transition-colors duration-500 ${theme === 'dark' ? 'bg-slate-950 text-slate-200' : 'bg-stone-50 text-stone-800'}`}>
+                    <StarField theme={theme} />
+                    
+                    <Header toggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')} theme={theme} />
 
-          const toggleTheme = () => {
-            const newTheme = theme === 'dark' ? 'light' : 'dark';
-            setTheme(newTheme);
-            localStorage.setItem('theme', newTheme);
-          };
+                    <main className="container mx-auto px-4 py-8 relative z-10">
+                        <Hero theme={theme} />
+                        <Ranking theme={theme} />
 
-          return (
-            <div className={`min-h-screen font-sans selection:bg-yellow-500/30 theme-transition ${theme === 'dark' ? 'bg-slate-950 text-slate-200' : 'bg-orange-50 text-slate-800'}`}>
-              <StarField theme={theme} />
-              
-              <Header savedSign={savedSignName} onOpenSaved={handleOpenSaved} theme={theme} toggleTheme={toggleTheme} />
-              
-              <main className="container mx-auto pb-24 relative z-10">
-                <Hero theme={theme} />
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4 md:px-0 max-w-6xl mx-auto">
-                  {zodiacData.map((sign) => (
-                    <div 
-                        key={sign.id} 
-                        onClick={() => setSelectedSign(sign)}
-                        className={`group relative border rounded-3xl p-6 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden flex flex-col items-center active:scale-95 ${theme === 'dark' ? 'bg-slate-900 border-slate-800 hover:border-yellow-500/50' : 'bg-white border-orange-100 hover:border-orange-300 shadow-sm'}`}
-                    >
-                        <div className={`absolute inset-0 bg-gradient-to-br transition-all duration-500 ${theme === 'dark' ? 'from-yellow-500/0 via-transparent to-purple-500/0 group-hover:from-yellow-500/10' : 'from-orange-200/0 via-transparent to-yellow-200/0 group-hover:from-orange-100/50'}`} />
-                        <div className="relative z-10 flex flex-col items-center text-center">
-                            <div className={`w-14 h-14 mb-3 rounded-full flex items-center justify-center transition-colors border shadow-inner ${theme === 'dark' ? 'bg-slate-950 border-slate-800' : 'bg-orange-50 border-orange-100'}`}>
-                                <Icon path={sign.icon} className={`w-8 h-8 transition-colors ${theme === 'dark' ? 'text-slate-400 group-hover:text-yellow-400' : 'text-slate-500 group-hover:text-orange-500'}`} />
-                            </div>
-                            <h3 className={`text-lg font-black ${theme === 'dark' ? 'text-slate-100 group-hover:text-yellow-400' : 'text-slate-800 group-hover:text-orange-600'}`}>{sign.name}</h3>
-                            <p className="text-[10px] font-bold uppercase opacity-50">{sign.dates}</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+                            {zodiacData.map((sign) => (
+                                <div 
+                                    key={sign.id}
+                                    onClick={() => setSelectedSign(sign)}
+                                    className={`group relative p-6 rounded-2xl border-2 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col items-center text-center overflow-hidden ${theme === 'dark' ? 'bg-slate-900 border-slate-800 hover:border-yellow-500/50' : 'bg-white border-stone-200 hover:border-orange-400'}`}
+                                >
+                                    <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity ${theme === 'dark' ? 'from-yellow-500 to-purple-600' : 'from-orange-400 to-red-500'}`} />
+                                    <div className={`w-16 h-16 mb-4 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${theme === 'dark' ? 'bg-slate-800 text-yellow-500' : 'bg-orange-50 text-orange-600'}`}>
+                                        <Icon path={sign.icon} className="w-8 h-8" />
+                                    </div>
+                                    <h3 className="text-lg font-black uppercase tracking-wide">{sign.name}</h3>
+                                    <p className="text-[10px] font-bold opacity-50 uppercase mt-1">{sign.dates}</p>
+                                </div>
+                            ))}
                         </div>
-                    </div>
-                  ))}
-                </div>
-              </main>
 
-              <footer className={`relative z-10 border-t py-12 ${theme === 'dark' ? 'border-white/5 bg-slate-950' : 'border-orange-200 bg-orange-50'}`}>
-                <div className="container mx-auto px-4 text-center">
-                  <div className="flex items-center justify-center gap-3 mb-6">
-                     <div className="animate-spin-slow"><Icons.Sun className="w-5 h-5 text-yellow-500" /></div>
-                     <span className={`font-black text-lg italic ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>AstriVostri.com</span>
-                  </div>
-                  <p className={`text-xs max-w-md mx-auto leading-relaxed ${theme === 'dark' ? 'text-slate-600' : 'text-slate-500'}`}>
-                    © 2024 AstriVostri. Oroscopo satirico. Se le stelle non so' d'accordo, prenditela co' loro e co' chi ve li manna.
-                  </p>
-                </div>
-              </footer>
+                        {/* Network Banner */}
+                        <div className={`mt-16 mx-auto max-w-lg p-6 rounded-2xl border-2 border-dashed text-center ${theme === 'dark' ? 'bg-slate-900/50 border-slate-800' : 'bg-white/50 border-stone-300'}`}>
+                            <p className="mb-3 font-bold text-sm opacity-70">{networkMsg}</p>
+                            <div className="flex flex-col sm:flex-row justify-center gap-4 text-sm font-black tracking-widest">
+                                <a href="https://oracoloderoma.com" className="text-yellow-500 hover:underline">ORACOLODEROMA.COM</a>
+                                <a href="https://ammazzachesfiga.com" className="text-red-500 hover:underline">AMMAZZACHESFIGA.COM</a>
+                            </div>
+                        </div>
 
-              <CookieBanner theme={theme} />
-              <HoroscopeModal sign={selectedSign} isOpen={!!selectedSign} onClose={() => setSelectedSign(null)} theme={theme} />
-            </div>
-          );
+                    </main>
+
+                    <footer className="relative z-10 text-center py-8 border-t border-current/5 opacity-60 text-xs">
+                        &copy; 2024 AstriVostri. Fatto co'r core a Roma.
+                    </footer>
+
+                    <HoroscopeModal sign={selectedSign} isOpen={!!selectedSign} onClose={() => setSelectedSign(null)} theme={theme} />
+                </div>
+            );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -1054,4 +520,5 @@
     </script>
 </body>
 </html>
+
 
